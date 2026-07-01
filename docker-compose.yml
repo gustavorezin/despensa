@@ -1,0 +1,25 @@
+# Ambiente de desenvolvimento local — banco PostgreSQL.
+# Sobe com `npm run db:up` (ou `docker compose up -d`).
+# Em produção usamos Neon; nada aqui vai para a Vercel — só troca-se DATABASE_URL.
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: despensa-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: despensa
+      POSTGRES_PASSWORD: despensa
+      POSTGRES_DB: despensa
+    ports:
+      - "5432:5432"
+    volumes:
+      - despensa-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U despensa -d despensa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  despensa-db-data:
