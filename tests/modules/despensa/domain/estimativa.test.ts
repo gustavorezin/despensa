@@ -9,8 +9,7 @@ import {
 } from "@/modules/despensa/domain/estimativa";
 
 const hoje = new Date("2026-07-11T12:00:00Z");
-const diasAtras = (n: number) =>
-  new Date(hoje.getTime() - n * 86_400_000);
+const diasAtras = (n: number) => new Date(hoje.getTime() - n * 86_400_000);
 
 function historico(over: Partial<HistoricoItem> = {}): HistoricoItem {
   return {
@@ -22,100 +21,168 @@ function historico(over: Partial<HistoricoItem> = {}): HistoricoItem {
 }
 
 describe("diasDesde", () => {
-  it("conta os dias de calendário decorridos", () => {
-    expect(diasDesde(diasAtras(18), hoje)).toBe(18);
+  it("dado uma data no passado, então conta os dias de calendário decorridos", () => {
+    // Dado
+    const data = diasAtras(18);
+
+    // Quando
+    const dias = diasDesde(data, hoje);
+
+    // Então
+    expect(dias).toBe(18);
   });
 
-  it("nunca é negativo para datas no futuro", () => {
-    expect(diasDesde(diasAtras(-5), hoje)).toBe(0);
+  it("dado uma data no futuro, então nunca retorna negativo", () => {
+    // Dado
+    const data = diasAtras(-5);
+
+    // Quando
+    const dias = diasDesde(data, hoje);
+
+    // Então
+    expect(dias).toBe(0);
   });
 });
 
 describe("calcularConfianca + nivelConfianca", () => {
-  it("dá confiança alta a um Item comprado há poucos dias", () => {
-    // Preparar
+  it("dado uma compra há poucos dias, então a confiança é alta", () => {
+    // Dado
     const h = historico({ numeroCompras: 1, ultimaCompraEm: diasAtras(1) });
 
-    // Agir
+    // Quando
     const nivel = nivelConfianca(calcularConfianca(h, hoje));
 
-    // Verificar
+    // Então
     expect(nivel).toBe("alta");
   });
 
-  it("cai para média conforme a última compra envelhece", () => {
+  it("dado que a última compra envelhece, então a confiança cai para média", () => {
+    // Dado
     const h = historico({ ultimaCompraEm: diasAtras(18) });
-    expect(nivelConfianca(calcularConfianca(h, hoje))).toBe("media");
+
+    // Quando
+    const nivel = nivelConfianca(calcularConfianca(h, hoje));
+
+    // Então
+    expect(nivel).toBe("media");
   });
 
-  it("dá confiança baixa quando a última compra é muito antiga", () => {
+  it("dado uma compra muito antiga, então a confiança é baixa", () => {
+    // Dado
     const h = historico({ ultimaCompraEm: diasAtras(60) });
-    expect(nivelConfianca(calcularConfianca(h, hoje))).toBe("baixa");
+
+    // Quando
+    const nivel = nivelConfianca(calcularConfianca(h, hoje));
+
+    // Então
+    expect(nivel).toBe("baixa");
   });
 
-  it("trata Item sem nenhuma Compra como baixa confiança", () => {
+  it("dado um item sem nenhuma compra, então a confiança é baixa", () => {
+    // Dado
     const h = historico({ numeroCompras: 0, ultimaCompraEm: null });
-    expect(nivelConfianca(calcularConfianca(h, hoje))).toBe("baixa");
+
+    // Quando
+    const nivel = nivelConfianca(calcularConfianca(h, hoje));
+
+    // Então
+    expect(nivel).toBe("baixa");
   });
 
-  it("mantém a pontuação dentro de 0..1", () => {
+  it("dado muitas compras recentes, então a pontuação permanece dentro de 0..1", () => {
+    // Dado
     const h = historico({ numeroCompras: 9, ultimaCompraEm: diasAtras(0) });
-    const p = calcularConfianca(h, hoje);
-    expect(p).toBeGreaterThanOrEqual(0);
-    expect(p).toBeLessThanOrEqual(1);
+
+    // Quando
+    const pontuacao = calcularConfianca(h, hoje);
+
+    // Então
+    expect(pontuacao).toBeGreaterThanOrEqual(0);
+    expect(pontuacao).toBeLessThanOrEqual(1);
   });
 });
 
-describe("calcularConfianca — ajuste manual domina", () => {
-  it("'Tem' eleva a confiança mesmo com compra antiga", () => {
+describe("calcularConfianca — o ajuste manual mais recente domina", () => {
+  it("dado 'Tem' após uma compra antiga, então a confiança é alta", () => {
+    // Dado
     const h = historico({
       ultimaCompraEm: diasAtras(50),
       ultimoAjuste: { tipo: "TEM", em: diasAtras(1) },
     });
-    expect(nivelConfianca(calcularConfianca(h, hoje))).toBe("alta");
+
+    // Quando
+    const nivel = nivelConfianca(calcularConfianca(h, hoje));
+
+    // Então
+    expect(nivel).toBe("alta");
   });
 
-  it("'Acabou' derruba a confiança mesmo com compra recente", () => {
+  it("dado 'Acabou' após uma compra recente, então a confiança é baixa", () => {
+    // Dado
     const h = historico({
       ultimaCompraEm: diasAtras(1),
       ultimoAjuste: { tipo: "ACABOU", em: diasAtras(0) },
     });
-    expect(nivelConfianca(calcularConfianca(h, hoje))).toBe("baixa");
+
+    // Quando
+    const nivel = nivelConfianca(calcularConfianca(h, hoje));
+
+    // Então
+    expect(nivel).toBe("baixa");
   });
 
-  it("ignora um ajuste mais antigo que a última Compra", () => {
-    // Preparar: comprou depois de ter marcado 'Acabou' → a compra manda
+  it("dado um ajuste mais antigo que a última compra, então a compra prevalece", () => {
+    // Dado: comprou depois de ter marcado 'Acabou' → a compra é o evento mais recente
     const h = historico({
       numeroCompras: 2,
       ultimaCompraEm: diasAtras(1),
       ultimoAjuste: { tipo: "ACABOU", em: diasAtras(10) },
     });
 
-    // Agir + Verificar
-    expect(nivelConfianca(calcularConfianca(h, hoje))).toBe("alta");
+    // Quando
+    const nivel = nivelConfianca(calcularConfianca(h, hoje));
+
+    // Então
+    expect(nivel).toBe("alta");
   });
 });
 
 describe("textoQuantidade", () => {
-  it("mostra 'acabou' quando a quantidade é zero", () => {
-    expect(textoQuantidade({ qtd: 0, unidade: "un", nivel: "baixa" })).toBe(
-      "acabou",
-    );
+  it("dado quantidade zero, então mostra 'acabou'", () => {
+    // Dado
+    const entrada = { qtd: 0, unidade: "un", nivel: "baixa" as const };
+
+    // Quando
+    const texto = textoQuantidade(entrada);
+
+    // Então
+    expect(texto).toBe("acabou");
   });
 
-  it("mostra a quantidade aproximada quando a confiança é alta", () => {
-    expect(textoQuantidade({ qtd: 2, unidade: "pacote", nivel: "alta" })).toBe(
-      "~2 pacote",
-    );
+  it("dado confiança alta, então mostra a quantidade aproximada com a unidade", () => {
+    // Dado
+    const entrada = { qtd: 2, unidade: "pacote", nivel: "alta" as const };
+
+    // Quando
+    const texto = textoQuantidade(entrada);
+
+    // Então
+    expect(texto).toBe("~2 pacote");
   });
 
-  it("usa 'un' como unidade padrão", () => {
-    expect(textoQuantidade({ qtd: 1, unidade: null, nivel: "alta" })).toBe(
-      "~1 un",
-    );
+  it("dado uma unidade ausente, então usa 'un' como padrão", () => {
+    // Dado
+    const entrada = { qtd: 1, unidade: null, nivel: "alta" as const };
+
+    // Quando
+    const texto = textoQuantidade(entrada);
+
+    // Então
+    expect(texto).toBe("~1 un");
   });
 
-  it("esconde o número sob incerteza (média → 'aprox.', baixa → '?')", () => {
+  it("dado incerteza, então esconde o número (média → 'aprox.', baixa → '?')", () => {
+    // Dado / Quando / Então
     expect(textoQuantidade({ qtd: 3, unidade: "un", nivel: "media" })).toBe(
       "aprox.",
     );
@@ -124,20 +191,36 @@ describe("textoQuantidade", () => {
 });
 
 describe("gerarExplicacao", () => {
-  it("explica pouco histórico na primeira Compra", () => {
+  it("dado pouco histórico na primeira compra, então cita o histórico curto", () => {
+    // Dado
     const h = historico({ numeroCompras: 1, ultimaCompraEm: diasAtras(18) });
-    expect(gerarExplicacao(h, hoje)).toContain("pouco histórico");
+
+    // Quando
+    const texto = gerarExplicacao(h, hoje);
+
+    // Então
+    expect(texto).toContain("pouco histórico");
   });
 
-  it("reflete o ajuste 'Acabou' quando é o evento mais recente", () => {
-    const h = historico({
-      ultimoAjuste: { tipo: "ACABOU", em: diasAtras(0) },
-    });
-    expect(gerarExplicacao(h, hoje)).toContain("acabou");
+  it("dado 'Acabou' como evento mais recente, então a explicação reflete o ajuste", () => {
+    // Dado
+    const h = historico({ ultimoAjuste: { tipo: "ACABOU", em: diasAtras(0) } });
+
+    // Quando
+    const texto = gerarExplicacao(h, hoje);
+
+    // Então
+    expect(texto).toContain("acabou");
   });
 
-  it("cita o tempo desde a última compra para Item recorrente", () => {
+  it("dado um item recorrente, então cita o tempo desde a última compra", () => {
+    // Dado
     const h = historico({ numeroCompras: 4, ultimaCompraEm: diasAtras(10) });
-    expect(gerarExplicacao(h, hoje)).toContain("10 dias");
+
+    // Quando
+    const texto = gerarExplicacao(h, hoje);
+
+    // Então
+    expect(texto).toContain("10 dias");
   });
 });

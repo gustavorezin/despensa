@@ -28,25 +28,31 @@ Guia de como escrever testes unitários aqui. Segue as convenções do repositó
 ## Convenções de escrita
 
 - **Português** nos `describe`/`it` e nas variáveis (ADR-011). `describe` nomeia a unidade
-  (a função/regra); `it` descreve o **comportamento observável**, não a implementação.
-  - Bom: `it("marca confiança baixa quando a última compra é antiga", ...)`
+  (a função/regra); `it` descreve o **cenário** em linguagem natural, no formato
+  **"dado … então …"** (o "quando" costuma ficar implícito na ação). Foco no comportamento
+  observável, nunca na implementação.
+  - Bom: `it("dado uma última compra antiga, então a confiança é baixa", ...)`
   - Evite: `it("retorna 0.3", ...)`
 - **Um comportamento por teste.** Prefira vários testes pequenos a um teste com muitos asserts.
-- **Preparar → Agir → Verificar** (AAA), separados por linha em branco:
+- **Dado → Quando → Então** (Given-When-Then) no corpo, um bloco por etapa, separados por
+  linha em branco e marcados por comentário. Torna explícito o contexto, a ação e a expectativa:
 
   ```ts
-  it("eleva a confiança quando o usuário confirma 'Tem'", () => {
-    // Preparar
-    const historico = { numeroCompras: 1, ultimaCompraEm: dias(hoje, -40), ultimoAjuste: "TEM" };
+  it("dado que o usuário confirma 'Tem', então a confiança é alta", () => {
+    // Dado
+    const historico = { numeroCompras: 1, ultimaCompraEm: dias(hoje, -40), ultimoAjuste: { tipo: "TEM", em: hoje } };
 
-    // Agir
+    // Quando
     const pontuacao = calcularConfianca(historico, hoje);
 
-    // Verificar
+    // Então
     expect(nivelConfianca(pontuacao)).toBe("alta");
   });
   ```
 
+  - **Dado**: o estado/entradas do cenário (o contexto).
+  - **Quando**: a ação sob teste — a chamada da função. Normalmente uma linha.
+  - **Então**: as asserções sobre o resultado observável.
 - **Cubra as bordas**, não só o caminho feliz: limiares (o valor exato onde 🟡 vira 🟢),
   entradas vazias/nulas, extremos (0, negativos se possível, datas muito antigas).
 
@@ -61,7 +67,8 @@ Guia de como escrever testes unitários aqui. Segue as convenções do repositó
 
 ## Checklist antes de concluir
 
-- [ ] Testes no lugar certo (`tests/` espelhando `src/`), nomes em português.
+- [ ] Testes no lugar certo (`tests/` espelhando `src/`), nomes em português no formato "dado … então …".
+- [ ] Cada teste tem os blocos **Dado / Quando / Então** marcados por comentário.
 - [ ] Cada limiar/branch da função tem ao menos um teste.
 - [ ] Nenhum acesso a relógio/rede/banco dentro do que é testado.
 - [ ] `npm run test` verde.
