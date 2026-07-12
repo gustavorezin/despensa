@@ -1,12 +1,17 @@
 import { exigirCasa } from "@/shared/auth/sessao";
 import { obterCasa } from "@/modules/casa/services/obterCasa";
+import { listarDespensa } from "@/modules/despensa/services/listarDespensa";
 import { EstadoVazio } from "@/shared/ui/EstadoVazio";
+import { DespensaLista } from "./DespensaLista";
 
-// A Despensa se preenche a partir das Compras (Marco 2). No Marco 1 mostra o
-// estado vazio com CTA, honesto sobre como ela ganha conteúdo.
+// A Despensa se preenche a partir das Compras (§4.3). Vazia → estado com CTA;
+// com dados → itens por categoria com semáforo de confiança (ADR-004).
 export default async function DespensaPage() {
   const { casaId } = await exigirCasa();
-  const casa = await obterCasa({ casaId });
+  const [casa, grupos] = await Promise.all([
+    obterCasa({ casaId }),
+    listarDespensa({ casaId }),
+  ]);
 
   return (
     <>
@@ -17,13 +22,17 @@ export default async function DespensaPage() {
         Despensa
       </h1>
 
-      <EstadoVazio
-        emoji="🧺"
-        titulo="Sua Despensa está vazia"
-        descricao="Ela se preenche sozinha a partir das Compras que você registrar. Sem digitar item por item."
-        ctaTexto="Registrar Compra"
-        ctaHref="/registrar"
-      />
+      {grupos.length === 0 ? (
+        <EstadoVazio
+          emoji="🧺"
+          titulo="Sua Despensa está vazia"
+          descricao="Ela se preenche sozinha a partir das Compras que você registrar. Sem digitar item por item."
+          ctaTexto="Registrar Compra"
+          ctaHref="/registrar"
+        />
+      ) : (
+        <DespensaLista grupos={grupos} />
+      )}
     </>
   );
 }

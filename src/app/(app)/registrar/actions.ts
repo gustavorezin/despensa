@@ -10,11 +10,12 @@ import {
 
 /**
  * Server Action do fluxo fundacional: valida (Zod, no service), persiste a
- * Compra e volta ao histórico. Recálculo de aprendizado entra nos Marcos 2/3.
+ * Compra, atualiza a Despensa e leva à Despensa (efeito imediato do registro).
  */
 export async function registrarCompraAction(entrada: RegistrarCompraEntrada) {
   const { casaId, usuarioId } = await exigirCasa();
   await registrarCompra({ casaId, usuarioId, entrada });
   revalidatePath("/compras");
-  redirect("/compras");
+  revalidatePath("/despensa");
+  redirect("/despensa");
 }
