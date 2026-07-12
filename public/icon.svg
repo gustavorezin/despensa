@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Despensa">
+  <rect width="512" height="512" fill="#4b44c7"/>
+  <g fill="none" stroke="#ffffff" stroke-width="18" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="156" y="126" width="200" height="260" rx="24"/>
+    <line x1="156" y1="256" x2="356" y2="256"/>
+  </g>
+  <g fill="#ffffff">
+    <rect x="184" y="168" width="54" height="66" rx="13"/>
+    <rect x="274" y="168" width="54" height="66" rx="13"/>
+    <circle cx="210" cy="322" r="30"/>
+    <circle cx="302" cy="322" r="30"/>
+  </g>
+</svg>

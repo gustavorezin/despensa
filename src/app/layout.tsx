@@ -11,6 +11,19 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Despensa",
   description: "Seu assistente de abastecimento doméstico.",
+  applicationName: "Despensa",
+  // Declarar `icons` manualmente sobrescreve as convenções de arquivo, então o
+  // apple-touch-icon (gerado por apple-icon.tsx) precisa ser listado aqui também.
+  icons: {
+    icon: "/icon.svg",
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
+  },
+  // Instalável como PWA em standalone; barra de status combina com o fundo.
+  appleWebApp: {
+    capable: true,
+    title: "Despensa",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
