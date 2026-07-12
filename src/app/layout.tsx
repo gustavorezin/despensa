@@ -27,7 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={jakarta.variable}>
-      <body className="min-h-full">{children}</body>
+      {/* Extensões de navegador injetam atributos no <body> (ex.: cz-shortcut-listen),
+          causando aviso de hydration inofensivo — suprimimos só neste nível. */}
+      <body className="min-h-full" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
