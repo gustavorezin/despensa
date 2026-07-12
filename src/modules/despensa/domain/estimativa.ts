@@ -1,0 +1,122 @@
+/*
+  Estimativa de Despensa — domínio puro (sem I/O). Heurística determinística F0
+  (spec-tecnica §5.2): deriva a confiança da estimativa a partir de proxies
+  (nº de Compras, recência, último ajuste). A pontuação é interna e nunca é
+  exposta: a UI só mostra o semáforo 🟢/🟡/🔴 (ADR-004).
+
+  O "agora" é sempre injetado (`hoje`) para manter as funções testáveis.
+  No Marco 3, o motor de aprendizado formal pode substituir estas funções
+  atrás da interface MotorAprendizado (§5.1).
+*/
+
+export type NivelConfianca = "alta" | "media" | "baixa";
+
+export type TipoAjuste = "TEM" | "POUCO" | "ACABOU" | "PRECISO";
+
+export type HistoricoItem = {
+  /** Quantas Compras da Casa já incluíram este Item. */
+  numeroCompras: number;
+  /** Data da Compra mais recente que incluiu o Item (null se nenhuma). */
+  ultimaCompraEm: Date | null;
+  /** Ajuste manual mais recente do usuário, se houver. */
+  ultimoAjuste: { tipo: TipoAjuste; em: Date } | null;
+};
+
+const MS_POR_DIA = 86_400_000;
+
+/** Dias de calendário decorridos entre `data` e `hoje` (>= 0). */
+export function diasDesde(data: Date, hoje: Date): number {
+  const inicio = (d: Date) =>
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return Math.max(0, Math.round((inicio(hoje) - inicio(data)) / MS_POR_DIA));
+}
+
+function limitar(n: number, min = 0, max = 1): number {
+  return Math.min(max, Math.max(min, n));
+}
+
+/** O ajuste manual manda quando é o evento mais recente do Item. */
+function ajusteDomina(h: HistoricoItem): boolean {
+  if (!h.ultimoAjuste) return false;
+  if (!h.ultimaCompraEm) return true;
+  return h.ultimoAjuste.em.getTime() >= h.ultimaCompraEm.getTime();
+}
+
+const PONTUACAO_POR_AJUSTE: Record<TipoAjuste, number> = {
+  TEM: 0.9,
+  PRECISO: 0.85,
+  POUCO: 0.5,
+  ACABOU: 0.2,
+};
+
+/**
+ * Pontuação interna de confiança (0–1). Nunca exposta na UI (ADR-004).
+ * Um ajuste recente domina; senão, recência da última Compra guia, com um
+ * pequeno bônus por histórico (mais Compras → um pouco mais de certeza).
+ */
+export function calcularConfianca(h: HistoricoItem, hoje: Date): number {
+  if (ajusteDomina(h)) return PONTUACAO_POR_AJUSTE[h.ultimoAjuste!.tipo];
+  if (!h.ultimaCompraEm) return 0.2;
+
+  const dias = diasDesde(h.ultimaCompraEm, hoje);
+  const recencia = dias <= 7 ? 0.85 : dias <= 21 ? 0.6 : dias <= 45 ? 0.4 : 0.2;
+  const bonusHistorico =
+    h.numeroCompras >= 3 ? 0.1 : h.numeroCompras === 2 ? 0.05 : 0;
+
+  return limitar(recencia + bonusHistorico);
+}
+
+/** Traduz a pontuação interna no nível do semáforo. */
+export function nivelConfianca(pontuacao: number): NivelConfianca {
+  if (pontuacao >= 0.66) return "alta";
+  if (pontuacao >= 0.4) return "media";
+  return "baixa";
+}
+
+/**
+ * Texto qualitativo da quantidade (mapeamento do protótipo). Nunca mostra
+ * pontuação; a granularidade acompanha a confiança.
+ */
+export function textoQuantidade({
+  qtd,
+  unidade,
+  nivel,
+}: {
+  qtd: number;
+  unidade: string | null;
+  nivel: NivelConfianca;
+}): string {
+  if (qtd <= 0) return "acabou";
+  if (nivel === "alta") return `~${qtd} ${unidade ?? "un"}`.trim();
+  if (nivel === "media") return "aprox.";
+  return "?";
+}
+
+/** Explicação doméstica gerada por template a partir dos números (ADR-008). */
+export function gerarExplicacao(h: HistoricoItem, hoje: Date): string {
+  if (ajusteDomina(h)) {
+    switch (h.ultimoAjuste!.tipo) {
+      case "TEM":
+        return "Você confirmou que ainda tem — por isso a confiança está alta.";
+      case "PRECISO":
+        return "Você ajustou a quantidade manualmente há pouco.";
+      case "POUCO":
+        return "Você marcou que está acabando; coloquei na sua lista mental de reposição.";
+      case "ACABOU":
+        return "Você marcou que acabou.";
+    }
+  }
+
+  if (!h.ultimaCompraEm) return "Ainda sem Compras registradas deste Item.";
+
+  const dias = diasDesde(h.ultimaCompraEm, hoje);
+  const tempo = dias === 0 ? "hoje" : dias === 1 ? "há 1 dia" : `há ${dias} dias`;
+
+  if (h.numeroCompras <= 1) {
+    return `Última compra ${tempo} e com pouco histórico — ainda não tenho certeza de quanto restou.`;
+  }
+  if (dias <= 21) {
+    return `Comprado ${tempo}; pela sua média, deve haver o suficiente.`;
+  }
+  return `Última compra ${tempo} — pela sua média, pode estar acabando.`;
+}

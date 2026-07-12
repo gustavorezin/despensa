@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { ItemRepository } from "@/modules/item/repository/ItemRepository";
 import { CompraRepository } from "@/modules/compra/repository/CompraRepository";
+import { atualizarDespensaAposCompra } from "@/modules/despensa/services/atualizarDespensaAposCompra";
 
 // Contrato do fluxo fundacional (ADR-005). Uma Compra tem ao menos 1 item;
 // cada linha tem um nome (texto do autocomplete/livre) e uma quantidade.
@@ -19,10 +21,9 @@ export const registrarCompraSchema = z.object({
 export type RegistrarCompraEntrada = z.infer<typeof registrarCompraSchema>;
 
 /**
- * Caso de uso: registrar uma Compra manual. Resolve/cria cada Item da Casa e
- * persiste Compra + CompraItem. Ver spec-tecnica §4.2.
- *
- * (O recálculo de aprendizado e a atualização da Despensa entram nos Marcos 2/3.)
+ * Caso de uso: registrar uma Compra manual. Resolve/cria cada Item da Casa,
+ * persiste Compra + CompraItem e dispara o recálculo da Despensa de forma
+ * síncrona (§4.2/§4.3). O motor de aprendizado formal entra no Marco 3.
  */
 export async function registrarCompra({
   casaId,
@@ -49,5 +50,26 @@ export async function registrarCompra({
     }),
   );
 
-  return CompraRepository.criarComItens({ casaId, usuarioId, itens: linhas });
+  // Compra + derivação da Despensa nascem na MESMA transação: ou as duas
+  // acontecem, ou nenhuma (§4.2/§4.3). Evita Compra persistida com Despensa
+  // desatualizada e o risco de reenvio/duplicação num passo pós-commit.
+  return prisma.$transaction(async (tx) => {
+    const compraId = await CompraRepository.criarComItens({
+      db: tx,
+      casaId,
+      usuarioId,
+      itens: linhas,
+    });
+
+    await atualizarDespensaAposCompra({
+      db: tx,
+      casaId,
+      itens: linhas.map((l) => ({
+        itemId: l.itemId,
+        quantidade: l.quantidade,
+      })),
+    });
+
+    return compraId;
+  });
 }
