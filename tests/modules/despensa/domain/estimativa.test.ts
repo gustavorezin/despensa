@@ -102,6 +102,56 @@ describe("calcularConfianca + nivelConfianca", () => {
   });
 });
 
+describe("nivelConfianca — limiares do semáforo", () => {
+  it("dado a pontuação exatamente em 0.66, então o nível é alto", () => {
+    // Dado / Quando / Então (fronteira alta ↔ média)
+    expect(nivelConfianca(0.66)).toBe("alta");
+    expect(nivelConfianca(0.659)).toBe("media");
+  });
+
+  it("dado a pontuação exatamente em 0.4, então o nível é médio", () => {
+    // Dado / Quando / Então (fronteira média ↔ baixa)
+    expect(nivelConfianca(0.4)).toBe("media");
+    expect(nivelConfianca(0.399)).toBe("baixa");
+  });
+});
+
+describe("calcularConfianca — fronteiras de recência", () => {
+  // numeroCompras = 1 isola a recência (bônus de histórico = 0).
+  it("dado a última compra há 7 dias, então ainda é alta; no 8º dia, cai para média", () => {
+    // Dado
+    const noLimite = historico({ numeroCompras: 1, ultimaCompraEm: diasAtras(7) });
+    const passouDoLimite = historico({
+      numeroCompras: 1,
+      ultimaCompraEm: diasAtras(8),
+    });
+
+    // Quando + Então
+    expect(nivelConfianca(calcularConfianca(noLimite, hoje))).toBe("alta");
+    expect(nivelConfianca(calcularConfianca(passouDoLimite, hoje))).toBe(
+      "media",
+    );
+  });
+
+  it("dado a última compra há 45 dias, então é média; no 46º dia, cai para baixa", () => {
+    // Dado
+    const noLimite = historico({
+      numeroCompras: 1,
+      ultimaCompraEm: diasAtras(45),
+    });
+    const passouDoLimite = historico({
+      numeroCompras: 1,
+      ultimaCompraEm: diasAtras(46),
+    });
+
+    // Quando + Então
+    expect(nivelConfianca(calcularConfianca(noLimite, hoje))).toBe("media");
+    expect(nivelConfianca(calcularConfianca(passouDoLimite, hoje))).toBe(
+      "baixa",
+    );
+  });
+});
+
 describe("calcularConfianca — o ajuste manual mais recente domina", () => {
   it("dado 'Tem' após uma compra antiga, então a confiança é alta", () => {
     // Dado

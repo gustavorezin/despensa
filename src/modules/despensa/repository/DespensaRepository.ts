@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { TipoAjuste } from "@/modules/despensa/domain/estimativa";
 
@@ -10,19 +11,21 @@ type LinhaHistorico = {
 export const DespensaRepository = {
   /** Cria/atualiza a estimativa de um Item (1 DespensaItem por Item). */
   async upsertItem({
+    db = prisma,
     casaId,
     itemId,
     qtdEstimada,
     confianca,
     ultimaCompraEm,
   }: {
+    db?: Prisma.TransactionClient;
     casaId: string;
     itemId: string;
     qtdEstimada: number;
     confianca: number;
     ultimaCompraEm: Date | null;
   }) {
-    return prisma.despensaItem.upsert({
+    return db.despensaItem.upsert({
       where: { itemId },
       create: { casaId, itemId, qtdEstimada, confianca, ultimaCompraEm },
       update: { qtdEstimada, confianca, ultimaCompraEm },
@@ -56,20 +59,23 @@ export const DespensaRepository = {
 
   /** Histórico de proxies de um Item, para (re)calcular a confiança. */
   async historicoItem({
+    db = prisma,
     casaId,
     itemId,
   }: {
+    db?: Prisma.TransactionClient;
     casaId: string;
     itemId: string;
   }): Promise<LinhaHistorico> {
     const [numeroCompras, ultimaCompra, ultimoAjuste] = await Promise.all([
-      prisma.compraItem.count({ where: { itemId, compra: { casaId } } }),
-      prisma.compra.findFirst({
+      // nº de Compras distintas que incluíram o Item (não de linhas).
+      db.compra.count({ where: { casaId, itens: { some: { itemId } } } }),
+      db.compra.findFirst({
         where: { casaId, itens: { some: { itemId } } },
         orderBy: { data: "desc" },
         select: { data: true },
       }),
-      prisma.ajusteDespensa.findFirst({
+      db.ajusteDespensa.findFirst({
         where: { casaId, itemId },
         orderBy: { em: "desc" },
         select: { tipo: true, em: true },
@@ -110,11 +116,12 @@ export const DespensaRepository = {
 
     const itemIds = itens.map((i) => i.itemId);
 
-    const [contagens, ajustes] = await Promise.all([
+    const [paresItemCompra, ajustes] = await Promise.all([
+      // um par (itemId, compraId) por Compra distinta que incluiu o Item —
+      // contamos os pares por Item para obter o nº de Compras (não de linhas).
       prisma.compraItem.groupBy({
-        by: ["itemId"],
+        by: ["itemId", "compraId"],
         where: { itemId: { in: itemIds }, compra: { casaId } },
-        _count: { _all: true },
       }),
       prisma.ajusteDespensa.findMany({
         where: { casaId, itemId: { in: itemIds } },
@@ -123,9 +130,13 @@ export const DespensaRepository = {
       }),
     ]);
 
-    const contagemPorItem = new Map(
-      contagens.map((c) => [c.itemId, c._count._all]),
-    );
+    const contagemPorItem = new Map<string, number>();
+    for (const par of paresItemCompra) {
+      contagemPorItem.set(
+        par.itemId,
+        (contagemPorItem.get(par.itemId) ?? 0) + 1,
+      );
+    }
     const ajustePorItem = new Map<string, { tipo: TipoAjuste; em: Date }>();
     for (const a of ajustes) {
       if (!ajustePorItem.has(a.itemId)) {

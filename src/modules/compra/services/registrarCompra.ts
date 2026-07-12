@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { ItemRepository } from "@/modules/item/repository/ItemRepository";
 import { CompraRepository } from "@/modules/compra/repository/CompraRepository";
 import { atualizarDespensaAposCompra } from "@/modules/despensa/services/atualizarDespensaAposCompra";
@@ -49,17 +50,26 @@ export async function registrarCompra({
     }),
   );
 
-  const compraId = await CompraRepository.criarComItens({
-    casaId,
-    usuarioId,
-    itens: linhas,
-  });
+  // Compra + derivação da Despensa nascem na MESMA transação: ou as duas
+  // acontecem, ou nenhuma (§4.2/§4.3). Evita Compra persistida com Despensa
+  // desatualizada e o risco de reenvio/duplicação num passo pós-commit.
+  return prisma.$transaction(async (tx) => {
+    const compraId = await CompraRepository.criarComItens({
+      db: tx,
+      casaId,
+      usuarioId,
+      itens: linhas,
+    });
 
-  // Derivada de Compra: atualiza a estimativa de Despensa de cada Item (§4.3).
-  await atualizarDespensaAposCompra({
-    casaId,
-    itens: linhas.map((l) => ({ itemId: l.itemId, quantidade: l.quantidade })),
-  });
+    await atualizarDespensaAposCompra({
+      db: tx,
+      casaId,
+      itens: linhas.map((l) => ({
+        itemId: l.itemId,
+        quantidade: l.quantidade,
+      })),
+    });
 
-  return compraId;
+    return compraId;
+  });
 }

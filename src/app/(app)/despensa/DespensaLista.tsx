@@ -119,7 +119,11 @@ export function DespensaLista({ grupos }: { grupos: GrupoDespensa[] }) {
         </div>
       ))}
 
-      <BottomSheet aberto={sheet !== null} aoFechar={() => setSheet(null)}>
+      <BottomSheet
+        aberto={sheet !== null}
+        aoFechar={() => setSheet(null)}
+        ariaLabel={sheet ? `${sheet.nome} — ajustar Despensa` : undefined}
+      >
         {sheet && sheet.modo === "estimativa" && (
           <>
             <div className="mb-3.5 flex items-center gap-2.5">

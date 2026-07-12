@@ -6,10 +6,13 @@
 export function BottomSheet({
   aberto,
   aoFechar,
+  ariaLabel = "Ações",
   children,
 }: {
   aberto: boolean;
   aoFechar: () => void;
+  /** Nome acessível do diálogo (lido por leitores de tela). */
+  ariaLabel?: string;
   children: React.ReactNode;
 }) {
   if (!aberto) return null;
@@ -27,6 +30,7 @@ export function BottomSheet({
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={ariaLabel}
         className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md bg-fundo px-5.5 pb-7 pt-2.5"
         style={{
           borderRadius: "28px 28px 0 0",

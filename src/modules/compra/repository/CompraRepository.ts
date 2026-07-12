@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type LinhaResolvida = {
@@ -8,40 +9,41 @@ type LinhaResolvida = {
 
 export const CompraRepository = {
   /**
-   * Cria a Compra e suas linhas numa transação. Resolve o Morador autor
-   * (criadaPorId) dentro da mesma transação — prepara F5 sem exigi-lo agora.
+   * Cria a Compra e suas linhas. Resolve o Morador autor (criadaPorId). Aceita
+   * um cliente de transação (`db`) para que a Compra e a derivação da Despensa
+   * nasçam atomicamente no caso de uso (§4.2/§4.3).
    */
   async criarComItens({
+    db = prisma,
     casaId,
     usuarioId,
     itens,
   }: {
+    db?: Prisma.TransactionClient;
     casaId: string;
     usuarioId: string;
     itens: LinhaResolvida[];
   }) {
-    return prisma.$transaction(async (tx) => {
-      const morador = await tx.morador.findUnique({
-        where: { usuarioId_casaId: { usuarioId, casaId } },
-        select: { id: true },
-      });
-      const compra = await tx.compra.create({
-        data: {
-          casaId,
-          data: new Date(),
-          criadaPorId: morador?.id ?? null,
-          itens: {
-            create: itens.map((i) => ({
-              itemId: i.itemId,
-              quantidade: i.quantidade,
-              unidade: i.unidade ?? null,
-            })),
-          },
-        },
-        select: { id: true },
-      });
-      return compra.id;
+    const morador = await db.morador.findUnique({
+      where: { usuarioId_casaId: { usuarioId, casaId } },
+      select: { id: true },
     });
+    const compra = await db.compra.create({
+      data: {
+        casaId,
+        data: new Date(),
+        criadaPorId: morador?.id ?? null,
+        itens: {
+          create: itens.map((i) => ({
+            itemId: i.itemId,
+            quantidade: i.quantidade,
+            unidade: i.unidade ?? null,
+          })),
+        },
+      },
+      select: { id: true },
+    });
+    return compra.id;
   },
 
   /** Histórico da Casa, mais recente primeiro, com a contagem de itens. */

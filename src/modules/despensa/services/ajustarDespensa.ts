@@ -2,12 +2,30 @@ import { z } from "zod";
 import { DespensaRepository } from "@/modules/despensa/repository/DespensaRepository";
 import { calcularConfianca } from "@/modules/despensa/domain/estimativa";
 
-// Ajuste rápido (ADR-007). PRECISO carrega a quantidade informada no seletor.
-export const ajustarDespensaSchema = z.object({
-  itemId: z.string().min(1),
-  tipo: z.enum(["TEM", "POUCO", "ACABOU", "PRECISO"]),
-  valor: z.number().int().min(0).max(999).optional(),
-});
+// Ajuste rápido (ADR-007). `valor` é o contrato do PRECISO: obrigatório nele e
+// inaplicável aos demais (Tem/Pouco/Acabou não carregam quantidade).
+export const ajustarDespensaSchema = z
+  .object({
+    itemId: z.string().min(1),
+    tipo: z.enum(["TEM", "POUCO", "ACABOU", "PRECISO"]),
+    valor: z.number().int().min(0).max(999).optional(),
+  })
+  .superRefine((entrada, ctx) => {
+    if (entrada.tipo === "PRECISO" && entrada.valor === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["valor"],
+        message: "Informe a quantidade para o ajuste preciso.",
+      });
+    }
+    if (entrada.tipo !== "PRECISO" && entrada.valor !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["valor"],
+        message: "Quantidade só se aplica ao ajuste preciso.",
+      });
+    }
+  });
 
 export type AjustarDespensaEntrada = z.infer<typeof ajustarDespensaSchema>;
 
@@ -27,10 +45,15 @@ export async function ajustarDespensa({
 }) {
   const { itemId, tipo, valor } = ajustarDespensaSchema.parse(entrada);
 
-  await DespensaRepository.registrarAjuste({ casaId, itemId, tipo, valor });
-
+  // Só se ajusta o que está na Despensa desta Casa. Valida ANTES de qualquer
+  // escrita, para não gravar eventos incoerentes de itens de outra Casa.
   const atual = await DespensaRepository.obterPorItem({ casaId, itemId });
-  const qtdAtual = atual ? Number(atual.qtdEstimada) : 0;
+  if (!atual) {
+    throw new Error("Item não está na Despensa desta Casa.");
+  }
+  const qtdAtual = Number(atual.qtdEstimada);
+
+  await DespensaRepository.registrarAjuste({ casaId, itemId, tipo, valor });
 
   const novaQtd =
     tipo === "ACABOU"
