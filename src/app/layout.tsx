@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // Sem `maximumScale`: travar o zoom prejudica acessibilidade (WCAG 1.4.4).
   themeColor: "#fbf8f3",
 };
 
