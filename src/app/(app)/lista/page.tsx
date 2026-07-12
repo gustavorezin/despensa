@@ -1,10 +1,13 @@
-import { getSessao } from "@/shared/auth/sessao";
+import { exigirCasa, getSessao } from "@/shared/auth/sessao";
+import { montarLista } from "@/modules/lista/services/montarLista";
 import { EstadoVazio } from "@/shared/ui/EstadoVazio";
+import { ListaConteudo } from "./ListaConteudo";
 
-// Lista é a home (ADR-002). As Sugestões do motor de aprendizado chegam no
-// Marco 3; por ora, estado vazio honesto que convida a registrar a 1ª Compra.
+// Lista é a home (ADR-002): unifica Sugestões do motor + itens manuais,
+// agrupadas por motivo (ADR-003/006). Vazia → estado com CTA (ADR-012).
 export default async function ListaPage() {
-  const sessao = await getSessao();
+  const { casaId } = await exigirCasa();
+  const [sessao, grupos] = await Promise.all([getSessao(), montarLista({ casaId })]);
   const primeiroNome = sessao?.user?.name?.split(" ")[0];
 
   return (
@@ -18,19 +21,23 @@ export default async function ListaPage() {
         Lista
       </h1>
 
-      <EstadoVazio
-        emoji="🤖"
-        titulo={
-          <>
-            Ainda estou aprendendo
-            <br />
-            seus hábitos
-          </>
-        }
-        descricao="Registre sua primeira Compra e eu começo a sugerir o que provavelmente está faltando."
-        ctaTexto="Registrar Compra"
-        ctaHref="/registrar"
-      />
+      {grupos.length === 0 ? (
+        <EstadoVazio
+          emoji="🤖"
+          titulo={
+            <>
+              Ainda estou aprendendo
+              <br />
+              seus hábitos
+            </>
+          }
+          descricao="Registre sua primeira Compra e eu começo a sugerir o que provavelmente está faltando."
+          ctaTexto="Registrar Compra"
+          ctaHref="/registrar"
+        />
+      ) : (
+        <ListaConteudo grupos={grupos} />
+      )}
     </>
   );
 }

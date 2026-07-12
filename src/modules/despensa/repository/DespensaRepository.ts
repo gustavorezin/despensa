@@ -33,25 +33,35 @@ export const DespensaRepository = {
     });
   },
 
-  async obterPorItem({ casaId, itemId }: { casaId: string; itemId: string }) {
-    return prisma.despensaItem.findFirst({
+  async obterPorItem({
+    db = prisma,
+    casaId,
+    itemId,
+  }: {
+    db?: Prisma.TransactionClient;
+    casaId: string;
+    itemId: string;
+  }) {
+    return db.despensaItem.findFirst({
       where: { casaId, itemId },
       select: { id: true, qtdEstimada: true },
     });
   },
 
   async registrarAjuste({
+    db = prisma,
     casaId,
     itemId,
     tipo,
     valor,
   }: {
+    db?: Prisma.TransactionClient;
     casaId: string;
     itemId: string;
     tipo: TipoAjuste;
     valor?: number | null;
   }) {
-    return prisma.ajusteDespensa.create({
+    return db.ajusteDespensa.create({
       data: { casaId, itemId, tipo, valor: valor ?? null },
       select: { id: true },
     });

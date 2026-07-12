@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { ItemRepository } from "@/modules/item/repository/ItemRepository";
 import { CompraRepository } from "@/modules/compra/repository/CompraRepository";
 import { atualizarDespensaAposCompra } from "@/modules/despensa/services/atualizarDespensaAposCompra";
+import { ListaRepository } from "@/modules/lista/repository/ListaRepository";
+import { recalcularSugestoes } from "@/modules/lista/services/recalcularSugestoes";
 
 // Contrato do fluxo fundacional (ADR-005). Uma Compra tem ao menos 1 item;
 // cada linha tem um nome (texto do autocomplete/livre) e uma quantidade.
@@ -22,8 +24,8 @@ export type RegistrarCompraEntrada = z.infer<typeof registrarCompraSchema>;
 
 /**
  * Caso de uso: registrar uma Compra manual. Resolve/cria cada Item da Casa,
- * persiste Compra + CompraItem e dispara o recálculo da Despensa de forma
- * síncrona (§4.2/§4.3). O motor de aprendizado formal entra no Marco 3.
+ * persiste Compra + CompraItem, deriva a Despensa e recalcula as Sugestões —
+ * tudo na mesma transação (§4.2/§4.3/§4.5). Itens comprados saem da Lista.
  */
 export async function registrarCompra({
   casaId,
@@ -61,14 +63,17 @@ export async function registrarCompra({
       itens: linhas,
     });
 
+    const itemIds = linhas.map((l) => l.itemId);
+
     await atualizarDespensaAposCompra({
       db: tx,
       casaId,
-      itens: linhas.map((l) => ({
-        itemId: l.itemId,
-        quantidade: l.quantidade,
-      })),
+      itens: linhas.map((l) => ({ itemId: l.itemId, quantidade: l.quantidade })),
     });
+
+    // Itens comprados saem da Lista; em seguida o motor regenera as Sugestões.
+    await ListaRepository.marcarComprados({ db: tx, casaId, itemIds });
+    await recalcularSugestoes({ db: tx, casaId });
 
     return compraId;
   });
