@@ -12,7 +12,11 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-full">
-      <div className="mx-auto max-w-md px-4.5 pt-6 pb-32">{children}</div>
+      {/* Coluna estreita no mobile; no desktop solta o limite e ocupa a largura
+          (sem layout desktop dedicado — só evita a margem enorme dos lados). */}
+      <div className="mx-auto max-w-md px-4.5 pt-6 pb-32 md:max-w-3xl md:px-8">
+        {children}
+      </div>
       <NavInferior />
     </div>
   );

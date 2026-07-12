@@ -28,7 +28,7 @@ export default function OnboardingCliente({
   const dotInativo = "#e2dbd0";
 
   return (
-    <main className="flex min-h-full flex-col">
+    <main className="mx-auto flex min-h-full w-full max-w-md flex-col md:max-w-3xl">
       <div className="flex justify-end px-6 pt-14">
         <button
           type="button"

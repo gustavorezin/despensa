@@ -25,7 +25,7 @@ export default async function LoginPage() {
 
   return (
     <main className="flex min-h-full flex-col justify-center px-8 py-16">
-      <div className="mx-auto w-full max-w-sm">
+      <div className="mx-auto w-full max-w-sm md:max-w-3xl">
         <div
           className="mb-7 flex h-20 w-20 items-center justify-center rounded-[28px] text-[42px]"
           style={{
