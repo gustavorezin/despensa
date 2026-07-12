@@ -55,6 +55,7 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
   }, [termo, addOpen]);
 
   const semResultados = termo.trim().length >= 2 && sugestoes.length === 0;
+  const temSugestao = grupos.some((g) => g.itens.some((i) => i.ehSugestao));
 
   function qtdDe(linha: LinhaLista) {
     return qtdLocal[linha.listaItemId] ?? linha.qtd;
@@ -95,18 +96,20 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
 
   return (
     <>
-      <div
-        className="mt-3.5 mb-1 flex items-start gap-2.5 rounded-2xl px-3.5 py-3"
-        style={{
-          background: "color-mix(in srgb, var(--color-acento) 7%, #fff)",
-          border: "1px solid color-mix(in srgb, var(--color-acento) 16%, #fff)",
-        }}
-      >
-        <span className="text-[18px] leading-tight">🤖</span>
-        <span className="text-[13.5px] font-semibold leading-snug text-[#544d8f]">
-          Separei o que provavelmente está faltando. Você confirma.
-        </span>
-      </div>
+      {temSugestao && (
+        <div
+          className="mt-3.5 mb-1 flex items-start gap-2.5 rounded-2xl px-3.5 py-3"
+          style={{
+            background: "color-mix(in srgb, var(--color-acento) 7%, #fff)",
+            border: "1px solid color-mix(in srgb, var(--color-acento) 16%, #fff)",
+          }}
+        >
+          <span className="text-[18px] leading-tight">🤖</span>
+          <span className="text-[13.5px] font-semibold leading-snug text-[#544d8f]">
+            Separei o que provavelmente está faltando. Você confirma.
+          </span>
+        </div>
+      )}
 
       {grupos.map((grupo) => (
         <div key={grupo.chave} className="mt-5">

@@ -48,16 +48,23 @@ export async function montarLista({
 
   for (const a of ativos) {
     const ehSugestao = a.origem === "SUGESTAO" && a.status === "ATIVO";
-    const qtd = a.qtdSugerida ? Number(a.qtdSugerida) : 1;
+    const qtd = a.qtdSugerida != null ? Number(a.qtdSugerida) : 1;
     const unidade = a.item.unidadePadrao ?? "un";
 
+    // Regenera microcópia E motivo pelo motor: assim grupo e texto vêm da MESMA
+    // avaliação (com `hoje` atual) e nunca divergem. O `motivo` persistido é só
+    // cache; ex.: um RECORRENTE que passou do intervalo é promovido a acabando.
     let resumo = "";
     let explicacao = "";
+    let motivoEfetivo = a.motivo;
     if (ehSugestao) {
       const historico = historicos.get(a.itemId);
       const sug = historico ? gerarSugestao(historico, hoje) : null;
-      resumo = sug?.resumo ?? "";
-      explicacao = sug?.explicacao ?? "";
+      if (sug) {
+        resumo = sug.resumo;
+        explicacao = sug.explicacao;
+        motivoEfetivo = sug.motivo;
+      }
     }
 
     const linha: LinhaLista = {
@@ -72,8 +79,8 @@ export async function montarLista({
       explicacao,
     };
 
-    if (ehSugestao && a.motivo === "PROVAVELMENTE_ACABANDO") empurrar("acabando", linha);
-    else if (ehSugestao && a.motivo === "RECORRENTE") empurrar("recorrente", linha);
+    if (ehSugestao && motivoEfetivo === "PROVAVELMENTE_ACABANDO") empurrar("acabando", linha);
+    else if (ehSugestao && motivoEfetivo === "RECORRENTE") empurrar("recorrente", linha);
     else empurrar("adicionou", linha);
   }
 

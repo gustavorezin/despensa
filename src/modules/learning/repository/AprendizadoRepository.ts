@@ -46,13 +46,19 @@ export const AprendizadoRepository = {
       }
     }
 
+    // União de Itens com Compra E Itens só com ajuste — o motor trata ajuste
+    // como proxy forte mesmo sem Compra (ultimaCompraEm null), então não os
+    // perdemos (hoje raro, pois ajuste nasce de DespensaItem, mas é o contrato).
+    const itemIds = new Set([...datasPorItem.keys(), ...ajustePorItem.keys()]);
     const resultado = new Map<string, HistoricoAprendizado>();
-    for (const [itemId, datas] of datasPorItem) {
-      datas.sort((a, b) => a.getTime() - b.getTime());
+    for (const itemId of itemIds) {
+      const datas = (datasPorItem.get(itemId) ?? []).sort(
+        (a, b) => a.getTime() - b.getTime(),
+      );
       resultado.set(itemId, {
         numeroCompras: datas.length,
-        primeiraCompraEm: datas[0],
-        ultimaCompraEm: datas[datas.length - 1],
+        primeiraCompraEm: datas[0] ?? null,
+        ultimaCompraEm: datas[datas.length - 1] ?? null,
         ultimoAjuste: ajustePorItem.get(itemId) ?? null,
       });
     }

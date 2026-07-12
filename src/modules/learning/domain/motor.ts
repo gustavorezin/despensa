@@ -83,7 +83,10 @@ export function gerarSugestao(
         qtdSugerida: 1,
       };
     }
-    // TEM / PRECISO: usuário confirmou estoque → não sugere.
+    // TEM (confirmou que tem) ou PRECISO (acabou de informar a quantidade): em
+    // ambos o usuário calibrou o estoque há pouco, então não sugerimos.
+    // (Simplificação F0: um PRECISO de valor 0 não vira Sugestão porque o motor
+    // não recebe o valor do ajuste — refinar quando o proxy carregar a quantidade.)
     return null;
   }
 
