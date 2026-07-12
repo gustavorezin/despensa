@@ -25,4 +25,12 @@ export const CasaRepository = {
       select: { id: true, nome: true },
     });
   },
+
+  async renomear({ id, nome }: { id: string; nome: string }) {
+    return prisma.casa.update({
+      where: { id },
+      data: { nome },
+      select: { id: true, nome: true },
+    });
+  },
 };
