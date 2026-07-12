@@ -13,6 +13,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // para o app também rodar em produção self-hosted e na verificação local.
   trustHost: true,
   session: { strategy: "database" },
+  // Telas próprias no lugar das páginas default do Auth.js (spec-design).
+  pages: {
+    signIn: "/login",
+    verifyRequest: "/verificar-email",
+  },
   providers: [
     Google,
     Resend({ from: process.env.AUTH_EMAIL_FROM }),

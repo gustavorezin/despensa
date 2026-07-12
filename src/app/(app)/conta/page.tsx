@@ -1,6 +1,8 @@
 import { signOut } from "@/auth";
 import { exigirCasa, getSessao } from "@/shared/auth/sessao";
 import { obterCasa } from "@/modules/casa/services/obterCasa";
+import EditarNome from "./EditarNome";
+import EditarNomeCasa from "./EditarNomeCasa";
 
 // Conta: perfil, dados da Casa e sair. Notificações (F1) e Moradores (F5)
 // aparecem como "Em breve", desabilitados (spec-design §6.4).
@@ -8,9 +10,8 @@ export default async function ContaPage() {
   const { casaId } = await exigirCasa();
   const [sessao, casa] = await Promise.all([getSessao(), obterCasa({ casaId })]);
 
-  const nome = sessao?.user?.name ?? "Você";
+  const nome = sessao?.user?.name ?? "";
   const email = sessao?.user?.email ?? "";
-  const inicial = nome.charAt(0).toUpperCase();
 
   async function sair() {
     "use server";
@@ -23,43 +24,12 @@ export default async function ContaPage() {
         Conta
       </h1>
 
-      <div className="flex items-center gap-3.5 rounded-[20px] border border-borda bg-superficie p-4.5">
-        <span className="flex h-14 w-14 flex-none items-center justify-center rounded-[18px] bg-acento text-[23px] font-extrabold text-white">
-          {inicial}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[17px] font-extrabold text-tinta">
-            {nome}
-          </span>
-          {email && (
-            <span className="mt-px block truncate text-[13.5px] text-suave">
-              {email}
-            </span>
-          )}
-        </span>
-      </div>
+      <EditarNome nomeAtual={nome} email={email} />
 
       <div className="mb-2.5 mt-6 pl-0.5 text-[12.5px] font-bold uppercase tracking-wide text-suave-2">
         Sua Casa
       </div>
-      <div className="flex items-center gap-3 rounded-[18px] border border-borda bg-superficie p-4">
-        <span
-          className="flex h-10 w-10 flex-none items-center justify-center rounded-xl text-[19px]"
-          style={{
-            background: "color-mix(in srgb, var(--color-acento) 9%, #fff)",
-          }}
-        >
-          🏠
-        </span>
-        <span className="flex-1">
-          <span className="block text-[12px] font-semibold text-suave-2">
-            Nome da Casa
-          </span>
-          <span className="mt-px block text-[15.5px] font-bold text-tinta">
-            {casa?.nome ?? "Minha casa"}
-          </span>
-        </span>
-      </div>
+      <EditarNomeCasa nomeAtual={casa?.nome ?? ""} />
 
       <div className="mb-2.5 mt-6 pl-0.5 text-[12.5px] font-bold uppercase tracking-wide text-suave-2">
         Configurações
