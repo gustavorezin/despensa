@@ -33,7 +33,7 @@ export function FormularioCompra({
   rotuloEnviando,
   aoConfirmar,
 }: {
-  inicial?: { descricao: string; dataISO: string; itens: ChipCompra[] };
+  inicial?: { descricao?: string; dataISO?: string; itens: ChipCompra[] };
   rotuloConfirmar: string;
   rotuloEnviando: string;
   aoConfirmar: (entrada: EntradaCompra) => Promise<void>;

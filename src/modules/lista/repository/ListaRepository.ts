@@ -90,7 +90,9 @@ export const ListaRepository = {
         motivo: true,
         status: true,
         qtdSugerida: true,
-        item: { select: { nomeCanonico: true, unidadePadrao: true } },
+        item: {
+          select: { nomeCanonico: true, unidadePadrao: true, categoria: true },
+        },
       },
     });
   },
