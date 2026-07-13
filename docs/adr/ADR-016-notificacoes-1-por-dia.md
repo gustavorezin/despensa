@@ -1,6 +1,6 @@
 # ADR-016: Notificações no máximo 1 por dia — Fase 1
 
-- **Status:** Aceito
+- **Status:** Aceito — fase de entrega ajustada pelo [ADR-024](./ADR-024-adiamento-das-notificacoes-push.md)
 - **Data:** 2026-06-28
 - **Fase do produto:** 1
 - **Decisor(es):** Gustavo Rezin Durigon

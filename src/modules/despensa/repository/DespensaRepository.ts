@@ -67,7 +67,24 @@ export const DespensaRepository = {
     });
   },
 
-  /** Histórico de proxies de um Item, para (re)calcular a confiança. */
+  /** Remove a estimativa de um Item (quando ele fica sem nenhuma fonte). */
+  async removerItem({
+    db = prisma,
+    casaId,
+    itemId,
+  }: {
+    db?: Prisma.TransactionClient;
+    casaId: string;
+    itemId: string;
+  }) {
+    return db.despensaItem.deleteMany({ where: { casaId, itemId } });
+  },
+
+  /**
+   * Histórico de proxies de um Item, para (re)calcular confiança e quantidade.
+   * `qtdUltimaCompra` soma as linhas do Item na Compra de data mais recente
+   * (empate de data desempatado por `criadaEm`) — base da rederivação (ADR-023).
+   */
   async historicoItem({
     db = prisma,
     casaId,
@@ -76,14 +93,17 @@ export const DespensaRepository = {
     db?: Prisma.TransactionClient;
     casaId: string;
     itemId: string;
-  }): Promise<LinhaHistorico> {
+  }): Promise<LinhaHistorico & { qtdUltimaCompra: number | null }> {
     const [numeroCompras, ultimaCompra, ultimoAjuste] = await Promise.all([
       // nº de Compras distintas que incluíram o Item (não de linhas).
       db.compra.count({ where: { casaId, itens: { some: { itemId } } } }),
       db.compra.findFirst({
         where: { casaId, itens: { some: { itemId } } },
-        orderBy: { data: "desc" },
-        select: { data: true },
+        orderBy: [{ data: "desc" }, { criadaEm: "desc" }],
+        select: {
+          data: true,
+          itens: { where: { itemId }, select: { quantidade: true } },
+        },
       }),
       db.ajusteDespensa.findFirst({
         where: { casaId, itemId },
@@ -95,6 +115,9 @@ export const DespensaRepository = {
     return {
       numeroCompras,
       ultimaCompraEm: ultimaCompra?.data ?? null,
+      qtdUltimaCompra: ultimaCompra
+        ? ultimaCompra.itens.reduce((soma, l) => soma + Number(l.quantidade), 0)
+        : null,
       ultimoAjuste: ultimoAjuste
         ? { tipo: ultimoAjuste.tipo as TipoAjuste, em: ultimoAjuste.em }
         : null,

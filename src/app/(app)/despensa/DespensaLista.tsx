@@ -2,13 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { BottomSheet } from "@/shared/ui/BottomSheet";
+import { SeletorClassificacao } from "@/shared/ui/SeletorClassificacao";
 import { IconeInfo, IconeMais, IconeMenos } from "@/shared/ui/icones";
 import type {
   GrupoDespensa,
   LinhaDespensa,
 } from "@/modules/despensa/services/listarDespensa";
 import type { NivelConfianca } from "@/modules/despensa/domain/estimativa";
-import { ajustarDespensaAction } from "./actions";
+import { comoUnidade, type Unidade } from "@/modules/item/domain/unidades";
+import {
+  comoCategoria,
+  type Categoria,
+} from "@/modules/item/domain/categorias";
+import { ajustarDespensaAction, classificarItemAction } from "./actions";
 
 const COR: Record<NivelConfianca, string> = {
   alta: "#2E9E6B",
@@ -28,11 +34,13 @@ type SheetEstado =
 export function DespensaLista({ grupos }: { grupos: GrupoDespensa[] }) {
   const [sheet, setSheet] = useState<SheetEstado>(null);
   const [precisoAberto, setPrecisoAberto] = useState(false);
+  const [classificacaoAberta, setClassificacaoAberta] = useState(false);
   const [pq, setPq] = useState(1);
   const [, iniciar] = useTransition();
 
   function abrir(item: LinhaDespensa, modo: "ajuste" | "estimativa") {
     setPrecisoAberto(false);
+    setClassificacaoAberta(false);
     setPq(1);
     setSheet({ ...item, modo });
   }
@@ -44,6 +52,34 @@ export function DespensaLista({ grupos }: { grupos: GrupoDespensa[] }) {
     setPrecisoAberto(false);
     iniciar(() => {
       ajustarDespensaAction({ itemId, tipo, valor });
+    });
+  }
+
+  // Edição da classificação do Item pela Despensa (ADR-022): atualiza o sheet
+  // na hora (otimista) e persiste; a revalidação reagrupa a tela.
+  function classificar(mudancas: {
+    unidade?: Unidade | null;
+    categoria?: Categoria | null;
+  }) {
+    if (!sheet) return;
+    const itemId = sheet.itemId;
+    setSheet({
+      ...sheet,
+      ...(mudancas.unidade !== undefined && { unidade: mudancas.unidade }),
+      ...(mudancas.categoria !== undefined && {
+        categoria: mudancas.categoria,
+      }),
+    });
+    iniciar(() => {
+      classificarItemAction({
+        itemId,
+        ...(mudancas.unidade !== undefined && {
+          unidadePadrao: mudancas.unidade,
+        }),
+        ...(mudancas.categoria !== undefined && {
+          categoria: mudancas.categoria,
+        }),
+      });
     });
   }
 
@@ -245,6 +281,24 @@ export function DespensaLista({ grupos }: { grupos: GrupoDespensa[] }) {
                 >
                   Salvar quantidade
                 </button>
+              </div>
+            )}
+
+            {!classificacaoAberta ? (
+              <button
+                type="button"
+                onClick={() => setClassificacaoAberta(true)}
+                className="w-full py-2 text-center text-[14px] font-semibold text-suave"
+              >
+                Unidade e categoria
+              </button>
+            ) : (
+              <div className="mt-1 rounded-[16px] border border-borda bg-superficie p-4">
+                <SeletorClassificacao
+                  unidade={comoUnidade(sheet.unidade)}
+                  categoria={comoCategoria(sheet.categoria)}
+                  aoAlterar={classificar}
+                />
               </div>
             )}
           </>

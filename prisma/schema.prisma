@@ -132,6 +132,7 @@ model Compra {
   id          String   @id @default(cuid())
   casaId      String
   data        DateTime
+  descricao   String? // texto livre: "Mercado Extra", "Janta especial"... (ADR-021)
   valorTotal  Decimal? @db.Decimal(10, 2)
   criadaPorId String? // Morador que registrou (opcional; prepara F5)
   criadaEm    DateTime @default(now())

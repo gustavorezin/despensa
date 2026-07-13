@@ -27,7 +27,36 @@ export const ItemRepository = {
       },
       orderBy: { nomeCanonico: "asc" },
       take: 7,
-      select: { id: true, nomeCanonico: true, categoria: true },
+      select: {
+        id: true,
+        nomeCanonico: true,
+        categoria: true,
+        unidadePadrao: true,
+      },
+    });
+  },
+
+  /**
+   * Atualiza a classificação de um Item — só os campos informados. Quando o
+   * usuário informa, sobrescreve o valor anterior: a última palavra é dele
+   * (ADR-022). `undefined` não toca no campo; `null` limpa.
+   */
+  async atualizarClassificacao({
+    db = prisma,
+    itemId,
+    categoria,
+    unidadePadrao,
+  }: {
+    db?: Prisma.TransactionClient;
+    itemId: string;
+    categoria?: string | null;
+    unidadePadrao?: string | null;
+  }) {
+    if (categoria === undefined && unidadePadrao === undefined) return;
+    await db.item.update({
+      where: { id: itemId },
+      data: { categoria, unidadePadrao },
+      select: { id: true },
     });
   },
 

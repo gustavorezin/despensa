@@ -1,6 +1,6 @@
 # Design Specification
 
-**Versão:** v0.1.0 — 2026-06-28
+**Versão:** v0.2.0 — 2026-07-12
 
 ---
 
@@ -79,13 +79,13 @@ Estado vazio no Dia 1: frase contextual + CTA para registrar a primeira Compra. 
 
 Itens agrupados por categoria. Cada Item exibe quantidade estimada e badge de confiança: 🟢 (confiança alta), 🟡 (confiança média), 🔴 (confiança baixa). Nenhum percentual aparece na interface. (ver [ADR-004](./adr/ADR-004-confianca-como-semaforo.md))
 
-Toque em qualquer Item abre o bottom sheet de ajuste rápido. Tap longo ou ícone ⓘ abre explicação textual do estado da estimativa. (ver [ADR-007](./adr/ADR-007-ajuste-de-despensa-3-opcoes.md))
+Toque em qualquer Item abre o bottom sheet de ajuste rápido. Tap longo ou ícone ⓘ abre explicação textual do estado da estimativa. (ver [ADR-007](./adr/ADR-007-ajuste-de-despensa-3-opcoes.md)) [F1] O mesmo bottom sheet permite editar unidade e categoria do Item, em progressive disclosure (ADR-022).
 
 Estado vazio: frase explicando que a Despensa se preenche a partir de Compras registradas + CTA para registrar a primeira Compra.
 
-### 6.3 Compras (histórico + registrar) [ADR-005, ADR-014, ADR-017]
+### 6.3 Compras (histórico + registrar) [ADR-005, ADR-014, ADR-017, ADR-021, ADR-022, ADR-023]
 
-Histórico cronológico de Compras registradas. Cada entrada mostra data e resumo de Itens. FAB "Registrar Compra" sempre visível via estrutura global.
+Histórico cronológico de Compras registradas. Cada entrada mostra data e resumo de Itens — [F1] e a descrição da Compra, quando houver (ex.: "3 itens · Mercado Extra"). FAB "Registrar Compra" sempre visível via estrutura global.
 
 Ao tocar no FAB, a tela "Como quer registrar?" apresenta as vias disponíveis por fase:
 
@@ -93,11 +93,15 @@ Ao tocar no FAB, a tela "Como quer registrar?" apresenta as vias disponíveis po
 - **[F1]** Acrescenta "Marcar da lista" quando a Lista tem ao menos 1 Item. (ver [ADR-017](./adr/ADR-017-marcar-da-lista-na-fase-1.md))
 - **[F3]** Acrescenta "Foto da nota". (ver [ADR-014](./adr/ADR-014-foto-da-nota-na-fase-3.md))
 
+[F1] O registro manual ganha dois campos discretos e ignoráveis — descrição (texto livre opcional) e data (default hoje, futura proibida) — que não obstruem o caminho rápido de captura. Tocar num chip abre bottom sheet com quantidade, unidade e categoria, tudo opcional. (ver [ADR-021](./adr/ADR-021-descricao-e-data-no-registro.md), [ADR-022](./adr/ADR-022-categoria-e-unidade-no-chip-do-registro.md))
+
+[F1] O detalhe da Compra ganha ações "Editar" (mesma tela do registro, pré-preenchida) e "Excluir" (confirmação em bottom sheet). (ver [ADR-023](./adr/ADR-023-edicao-e-exclusao-de-compra.md))
+
 Estado vazio: frase + CTA para registrar a primeira Compra.
 
 ### 6.4 Conta
 
-Perfil do usuário, dados da Casa (nome coletado no onboarding). Link para preferências de Notificações [F1] e Moradores [F5]. Opção de sair. (ver [ADR-009](./adr/ADR-009-onboarding-3-telas.md), [ADR-010](./adr/ADR-010-multi-morador-fora-do-mvp.md))
+Perfil do usuário, dados da Casa (nome coletado no onboarding). [F1] Entrada "Dicas de uso" — página estática com dicas por tela e a filosofia de uso ([ADR-025](./adr/ADR-025-dicas-de-uso-na-conta.md)). Link para preferências de Notificações [adiada — ADR-024] e Moradores [F5]. Opção de sair. (ver [ADR-009](./adr/ADR-009-onboarding-3-telas.md), [ADR-010](./adr/ADR-010-multi-morador-fora-do-mvp.md))
 
 ### 6.5 Modo Mercado [F1, ADR-015]
 
@@ -139,9 +143,9 @@ Bottom sheet com 3 opções predefinidas:
 
 Linguagem natural, doméstica: "você compra a cada ~3 semanas" em vez de "frequência de compra: 21 dias". Acessíveis em 1 toque, via bottom sheet. Nunca bloqueiam a interface nem interrompem o fluxo de varredura da Lista. O drawer sempre expõe as ações (aceitar, dispensar) junto com a explicação. (ver [ADR-008](./adr/ADR-008-explicacao-em-tap-to-expand.md))
 
-### 7.6 Notificações [F1, ADR-016]
+### 7.6 Notificações [adiada — ADR-024, ADR-016]
 
-Máximo 1 notificação push por dia por Casa. Conteúdo contextual que entrega valor no próprio banner (ex.: "Sua lista parece pronta — 8 sugestões te esperando."). Deep-link direto para a Lista; o usuário chega à ação com 1 toque. Tom não-acusatório: o silêncio da notificação é informativo — se não chegou notificação, não há nada urgente. Configurável em Conta. (ver [ADR-016](./adr/ADR-016-notificacoes-1-por-dia.md))
+**Adiadas para fase posterior ([ADR-024](./adr/ADR-024-adiamento-das-notificacoes-push.md)).** Quando entrarem: máximo 1 notificação push por dia por Casa. Conteúdo contextual que entrega valor no próprio banner (ex.: "Sua lista parece pronta — 8 sugestões te esperando."). Deep-link direto para a Lista; o usuário chega à ação com 1 toque. Tom não-acusatório: o silêncio da notificação é informativo — se não chegou notificação, não há nada urgente. Configurável em Conta. (ver [ADR-016](./adr/ADR-016-notificacoes-1-por-dia.md))
 
 ### 7.7 Captura por foto da nota [F3, ADR-014]
 
@@ -196,10 +200,12 @@ Cada fase entrega valor sozinha — o usuário da Fase 0 tem um produto completo
 | Explicações em tap-to-expand | F0 |
 | Estados vazios com CTA | F0 |
 | Onboarding 3 telas | F0 |
+| Registro completo (descrição, data, chip com detalhes, editar/excluir) | F1 |
+| Página "Dicas de uso" na Conta | F1 |
 | Botão "Modo Mercado" na Lista | F1 |
 | Modo Mercado (fullscreen modal) | F1 |
 | "Marcar da lista" no fluxo de registro | F1 |
-| Notificações push (máx. 1/dia) | F1 |
+| Notificações push (máx. 1/dia) | adiada (ADR-024) |
 | Swipe para dispensar Sugestão | F1 |
 | "Foto da nota" no fluxo de registro | F3 |
 | Tela de revisão de Itens da nota | F3 |
@@ -241,3 +247,8 @@ Mudanças que alterem decisões já tomadas (estrutura de navegação, padrão d
 | Offline para registro e ajuste, com fila de sync, F4 | [ADR-018](./adr/ADR-018-offline-na-fase-4.md) |
 | Cada fase entrega valor sozinha; recursos novos entram nas 4 abas existentes | [ADR-019](./adr/ADR-019-faseamento.md) |
 | Toda decisão de UX não-trivial documentada como ADR imutável | [ADR-020](./adr/ADR-020-adocao-de-adrs.md) |
+| Descrição e data no registro, campos discretos e ignoráveis | [ADR-021](./adr/ADR-021-descricao-e-data-no-registro.md) |
+| Bottom sheet no chip com quantidade, unidade e categoria | [ADR-022](./adr/ADR-022-categoria-e-unidade-no-chip-do-registro.md) |
+| Editar/Excluir no detalhe da Compra; exclusão confirma em bottom sheet | [ADR-023](./adr/ADR-023-edicao-e-exclusao-de-compra.md) |
+| Notificações push adiadas para fase posterior | [ADR-024](./adr/ADR-024-adiamento-das-notificacoes-push.md) |
+| Página "Dicas de uso" na Conta, sem tour guiado | [ADR-025](./adr/ADR-025-dicas-de-uso-na-conta.md) |

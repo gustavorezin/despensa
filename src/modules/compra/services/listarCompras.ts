@@ -4,6 +4,7 @@ import { rotularDataCompra } from "@/shared/utils/data";
 export type CompraResumo = {
   id: string;
   dataLabel: string;
+  descricao: string | null;
   quantidadeItens: number;
 };
 
@@ -17,6 +18,7 @@ export async function listarCompras({
   return compras.map((c) => ({
     id: c.id,
     dataLabel: rotularDataCompra(c.data),
+    descricao: c.descricao,
     quantidadeItens: c._count.itens,
   }));
 }

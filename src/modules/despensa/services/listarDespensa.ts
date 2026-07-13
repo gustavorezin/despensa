@@ -6,12 +6,19 @@ import {
   gerarExplicacao,
   type NivelConfianca,
 } from "@/modules/despensa/domain/estimativa";
+import {
+  pesoCategoria,
+  SEM_CATEGORIA,
+} from "@/modules/item/domain/categorias";
 import { rotularDataCompra } from "@/shared/utils/data";
 
 export type LinhaDespensa = {
   id: string;
   itemId: string;
   nome: string;
+  /** Classificação crua do Item, para edição pela Despensa (ADR-022). */
+  unidade: string | null;
+  categoria: string | null;
   nivel: NivelConfianca;
   qtyText: string;
   explicacao: string;
@@ -19,25 +26,6 @@ export type LinhaDespensa = {
 };
 
 export type GrupoDespensa = { categoria: string; itens: LinhaDespensa[] };
-
-// Categorias conhecidas primeiro; o resto alfabético; "Outros" por último.
-const ORDEM_CATEGORIAS = [
-  "Laticínios",
-  "Grãos e cereais",
-  "Hortifruti",
-  "Padaria",
-  "Carnes",
-  "Bebidas",
-  "Mercearia",
-  "Limpeza",
-  "Higiene",
-];
-
-function pesoCategoria(cat: string): number {
-  const i = ORDEM_CATEGORIAS.indexOf(cat);
-  if (i >= 0) return i;
-  return cat === "Outros" ? 999 : 500;
-}
 
 /**
  * Despensa pronta para a tela: recalcula a confiança na leitura (a estimativa
@@ -59,6 +47,8 @@ export async function listarDespensa({
       id: l.id,
       itemId: l.itemId,
       nome: l.nome,
+      unidade: l.unidade,
+      categoria: l.categoria,
       nivel,
       qtyText: textoQuantidade({
         qtd: l.qtdEstimada,
@@ -70,7 +60,7 @@ export async function listarDespensa({
         ? rotularDataCompra(l.historico.ultimaCompraEm)
         : "—",
     };
-    const categoria = l.categoria ?? "Outros";
+    const categoria = l.categoria ?? SEM_CATEGORIA;
     const grupo = porCategoria.get(categoria) ?? [];
     grupo.push(linha);
     porCategoria.set(categoria, grupo);

@@ -43,10 +43,12 @@ export default async function ComprasPage() {
                 <IconeSacola tamanho={22} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[15.5px] font-bold text-tinta">
-                  {c.dataLabel}
+                {/* A descrição identifica a Compra; a data vira apoio (ADR-021). */}
+                <span className="block truncate text-[15.5px] font-bold text-tinta">
+                  {c.descricao ?? c.dataLabel}
                 </span>
-                <span className="mt-px block text-[13px] text-suave">
+                <span className="mt-px block truncate text-[13px] text-suave">
+                  {c.descricao ? `${c.dataLabel} · ` : ""}
                   {c.quantidadeItens}{" "}
                   {c.quantidadeItens === 1 ? "item" : "itens"}
                 </span>
