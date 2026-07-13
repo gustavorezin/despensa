@@ -1,6 +1,6 @@
 # Product Specification
 
-**Versão:** v0.1.0 — 2026-06-28
+**Versão:** v0.2.0 — 2026-07-12
 
 ---
 
@@ -46,10 +46,14 @@ O usuário nunca vê os termos "inventário", "normalização" ou percentuais de
 - O sistema normaliza nomes semelhantes para o mesmo Item canônico. Exemplo: "Leite Tirol" e "Leite Parmalat" viram "Leite Integral".
 - Itens são compartilhados dentro da Casa — não existe catálogo global.
 - A categoria do Item é usada pelo Modo Mercado [F1] para reorganização por prateleira. No F0, categorização automática por IA não é requisito — o back-end pode usar categorias manuais ou fixas.
+- [F1] Categoria e unidade do Item podem ser definidas durante o registro de Compra ou pelo bottom sheet de ajuste da Despensa, a partir de listas fixas; ambas são opcionais. Item sem categoria aparece no grupo "Sem categoria". (ver [ADR-022](./adr/ADR-022-categoria-e-unidade-no-chip-do-registro.md))
 
 ### 3.3 Compras
 
 - Uma Compra é um evento de abastecimento: tem data, lista de Itens com quantidade, e opcionalmente valor total.
+- [F1] A Compra pode ter uma descrição — texto livre opcional (ex.: "Mercado Extra", "Janta do dia dos namorados") — exibida no histórico. (ver [ADR-021](./adr/ADR-021-descricao-e-data-no-registro.md))
+- [F1] A data da Compra é editável no registro: default hoje, retroativa permitida, futura proibida. (ver [ADR-021](./adr/ADR-021-descricao-e-data-no-registro.md))
+- [F1] Compras podem ser editadas (descrição, data, itens) e excluídas com confirmação; a Despensa é rederivada por Item afetado e as Sugestões são recalculadas. (ver [ADR-023](./adr/ADR-023-edicao-e-exclusao-de-compra.md))
 - Toda Compra pode ser registrada. [F0] Registro exclusivamente manual com autocomplete agressivo. (ver [ADR-005](./adr/ADR-005-captura-manual-com-autocomplete.md))
 - [F1] A tela de registro ganha a opção "Marcar da lista" como segunda via. (ver [ADR-017](./adr/ADR-017-marcar-da-lista-na-fase-1.md))
 - [F3] A tela de registro ganha a opção "Foto da nota fiscal" com OCR e tela de revisão. (ver [ADR-014](./adr/ADR-014-foto-da-nota-na-fase-3.md))
@@ -130,8 +134,10 @@ Ver tabela cross-referenciada com [ADR-019](./adr/ADR-019-faseamento.md). Regra 
 
 | Funcionalidade | Regra / nota |
 |---|---|
+| Registro de Compra completo | Descrição livre e data editável (ADR-021); categoria/unidade no chip (ADR-022); editar/excluir Compra com rederivação (ADR-023) |
+| Dicas de uso | Página estática na Conta; sem tour guiado (ADR-025) |
 | Modo Mercado | Fullscreen modal; Itens agrupados por categoria; checks grandes (ADR-015) |
-| Notificações push | Máximo 1 por dia por Casa; deep-link direto para a Lista (ADR-016) |
+| Notificações push | **Adiada para fase posterior (ADR-024).** Quando entrar: máximo 1 por dia por Casa; deep-link direto para a Lista (ADR-016) |
 | "Marcar da lista" como 2ª via de registro | Disponível quando a Lista tem ao menos 1 Item (ADR-017) |
 | Swipe para dispensar Sugestão | Sinal negativo de aprendizado (ADR-013) |
 
@@ -216,3 +222,8 @@ Os itens abaixo nunca farão parte deste produto ou estão explicitamente fora d
 | Offline com fila de sync na F4 | [ADR-018](./adr/ADR-018-offline-na-fase-4.md) |
 | Cada fase entrega valor sozinha (regra inviolável) | [ADR-019](./adr/ADR-019-faseamento.md) |
 | Decisões de produto documentadas como ADRs imutáveis | [ADR-020](./adr/ADR-020-adocao-de-adrs.md) |
+| Compra com descrição livre e data editável na F1 | [ADR-021](./adr/ADR-021-descricao-e-data-no-registro.md) |
+| Categoria e unidade no chip do registro, com listas fixas | [ADR-022](./adr/ADR-022-categoria-e-unidade-no-chip-do-registro.md) |
+| Edição e exclusão de Compra com rederivação da Despensa | [ADR-023](./adr/ADR-023-edicao-e-exclusao-de-compra.md) |
+| Notificações push adiadas para fase posterior | [ADR-024](./adr/ADR-024-adiamento-das-notificacoes-push.md) |
+| Dicas de uso centralizadas na Conta | [ADR-025](./adr/ADR-025-dicas-de-uso-na-conta.md) |

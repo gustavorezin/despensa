@@ -35,6 +35,11 @@ Para criar um novo ADR: copie [`_template.md`](./_template.md), nomeie como `ADR
 - [ADR-015](./ADR-015-modo-mercado-na-fase-1.md) — Modo Mercado — tela fullscreen modal com Itens agrupados por categoria para uso no supermercado.
 - [ADR-016](./ADR-016-notificacoes-1-por-dia.md) — Notificações 1/dia máximo — limite hard de 1 notificação push por dia com deep-link para a Lista.
 - [ADR-017](./ADR-017-marcar-da-lista-na-fase-1.md) — Marcar da lista — terceira via de registro que usa os Itens da Lista como base, reduzindo atrito para usuários com Lista madura.
+- [ADR-021](./ADR-021-descricao-e-data-no-registro.md) — Descrição e data no registro — a Compra ganha descrição livre opcional e data editável (retroativa permitida, futura proibida).
+- [ADR-022](./ADR-022-categoria-e-unidade-no-chip-do-registro.md) — Categoria e unidade no chip — bottom sheet opcional no chip do registro, com listas fixas de categorias e unidades.
+- [ADR-023](./ADR-023-edicao-e-exclusao-de-compra.md) — Edição e exclusão de Compra — Compras editáveis/excluíveis com rederivação da Despensa por Item afetado.
+- [ADR-024](./ADR-024-adiamento-das-notificacoes-push.md) — Adiamento das notificações push — push sai do escopo da Fase 1; formato do ADR-016 permanece válido.
+- [ADR-025](./ADR-025-dicas-de-uso-na-conta.md) — Dicas de uso na Conta — página estática com dicas por tela; sem tour guiado nem cards contextuais.
 
 ### Fase 3 — Captura por imagem 📷
 
@@ -69,8 +74,13 @@ Para criar um novo ADR: copie [`_template.md`](./_template.md), nomeie como `ADR
 | ADR-013 | Aprendizado por proxies | Aceito | 2026-06-28 |
 | ADR-014 | Foto da nota na Fase 3 | Aceito | 2026-06-28 |
 | ADR-015 | Modo Mercado na Fase 1 | Aceito | 2026-06-28 |
-| ADR-016 | Notificações 1/dia | Aceito | 2026-06-28 |
+| ADR-016 | Notificações 1/dia | Aceito (fase de entrega ajustada pelo ADR-024) | 2026-06-28 |
 | ADR-017 | Marcar da lista na Fase 1 | Aceito | 2026-06-28 |
 | ADR-018 | Offline na Fase 4 | Aceito | 2026-06-28 |
 | ADR-019 | Faseamento (meta) | Aceito | 2026-06-28 |
 | ADR-020 | Adoção de ADRs (meta) | Aceito | 2026-06-28 |
+| ADR-021 | Descrição e data no registro | Aceito | 2026-07-12 |
+| ADR-022 | Categoria e unidade no chip | Aceito | 2026-07-12 |
+| ADR-023 | Edição e exclusão de Compra | Aceito | 2026-07-12 |
+| ADR-024 | Adiamento das notificações push | Aceito | 2026-07-12 |
+| ADR-025 | Dicas de uso na Conta | Aceito | 2026-07-12 |

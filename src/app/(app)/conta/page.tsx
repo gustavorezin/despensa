@@ -1,11 +1,13 @@
+import Link from "next/link";
 import { signOut } from "@/auth";
 import { exigirCasa, getSessao } from "@/shared/auth/sessao";
 import { obterCasa } from "@/modules/casa/services/obterCasa";
+import { IconeChevronDireita } from "@/shared/ui/icones";
 import EditarNome from "./EditarNome";
 import EditarNomeCasa from "./EditarNomeCasa";
 
-// Conta: perfil, dados da Casa e sair. Notificações (F1) e Moradores (F5)
-// aparecem como "Em breve", desabilitados (spec-design §6.4).
+// Conta: perfil, dados da Casa, dicas de uso (ADR-025) e sair. Notificações
+// (adiadas — ADR-024) e Moradores (F5) aparecem como "Em breve" (§6.4).
 export default async function ContaPage() {
   const { casaId } = await exigirCasa();
   const [sessao, casa] = await Promise.all([getSessao(), obterCasa({ casaId })]);
@@ -35,6 +37,19 @@ export default async function ContaPage() {
         Configurações
       </div>
       <div className="overflow-hidden rounded-[18px] border border-borda bg-superficie">
+        <Link
+          href="/conta/dicas"
+          className="flex items-center gap-3 p-4"
+          style={{ borderBottom: "1px solid #f4efe8" }}
+        >
+          <span className="text-[18px]">💡</span>
+          <span className="flex-1 text-[15px] font-semibold text-tinta">
+            Dicas de uso
+          </span>
+          <span className="flex text-[#cfc7bb]">
+            <IconeChevronDireita tamanho={17} />
+          </span>
+        </Link>
         {[
           { emoji: "🔔", label: "Notificações" },
           { emoji: "👥", label: "Moradores" },

@@ -42,6 +42,31 @@ function ajusteDomina(h: HistoricoItem): boolean {
   return h.ultimoAjuste.em.getTime() >= h.ultimaCompraEm.getTime();
 }
 
+export type HistoricoRederivacao = HistoricoItem & {
+  /** Quantidade do Item na Compra de data mais recente (null se nenhuma). */
+  qtdUltimaCompra: number | null;
+};
+
+/**
+ * Nova `qtdEstimada` de um Item após qualquer mudança nas Compras — registro
+ * (inclusive retroativo), edição ou exclusão (ADR-023). `null` significa
+ * remover o DespensaItem: a Despensa é dado derivado; sem fonte, ela some.
+ */
+export function rederivarQtdEstimada(
+  h: HistoricoRederivacao,
+  qtdAtual: number | null,
+): number | null {
+  // Sem nenhuma fonte (nem Compra, nem ajuste) não há o que estimar.
+  if (h.numeroCompras === 0 && !h.ultimoAjuste) return null;
+
+  // Um ajuste manual posterior à última Compra não pode ser atropelado
+  // pela edição de uma Compra antiga.
+  if (ajusteDomina(h)) return qtdAtual ?? 0;
+
+  // Estoque F0 ≈ o que veio na Compra de data mais recente.
+  return h.qtdUltimaCompra ?? qtdAtual ?? 0;
+}
+
 const PONTUACAO_POR_AJUSTE: Record<TipoAjuste, number> = {
   TEM: 0.9,
   PRECISO: 0.85,

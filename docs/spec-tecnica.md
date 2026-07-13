@@ -1,6 +1,6 @@
 # Technical Specification
 
-**Versão:** v0.1.0 — 2026-06-29
+**Versão:** v0.2.0 — 2026-07-12
 **Decisor(es):** Gustavo Rezin Durigon
 
 > Guia técnico de desenvolvimento. Complementa [spec-produto.md](./spec-produto.md) e [spec-design.md](./spec-design.md). Não substitui ADRs de produto/UX; quando a arquitetura é restringida por uma decisão de produto, o ADR é citado.
@@ -159,7 +159,7 @@ Usuario ──< Morador >── Casa
 | **Morador** | usuarioId, casaId, papel | Liga Usuario ↔ Casa. `papel` já previsto para multi-morador (F5). |
 | **Item** | id, casaId, nomeCanonico, categoria, unidadePadrao | Produto genérico, marca não diferencia. Compartilhado na Casa. |
 | **ApelidoItem** | id, itemId, textoBruto | Mapeia nomes digitados/OCR ao Item canônico (normalização). |
-| **Compra** | id, casaId, data, valorTotal?, criadaPor | Evento de abastecimento. Fonte primária de aprendizado. |
+| **Compra** | id, casaId, data, descricao?, valorTotal?, criadaPor | Evento de abastecimento. Fonte primária de aprendizado. `descricao` é texto livre opcional ([ADR-021](./adr/ADR-021-descricao-e-data-no-registro.md)). |
 | **CompraItem** | id, compraId, itemId, quantidade, unidade, precoUnit? | Linha de uma Compra. |
 | **DespensaItem** | id, casaId, itemId, qtdEstimada, confianca, ultimaCompraEm, atualizadoEm | Estoque estimado + nível de confiança (semáforo). Derivado, recalculável. |
 | **AjusteDespensa** | id, casaId, itemId, tipo (TEM/POUCO/ACABOU/PRECISO), valor?, em | Registro de ajustes — **proxy de consumo** ([ADR-013](./adr/ADR-013-aprendizado-por-proxies.md)). |
@@ -255,7 +255,7 @@ Princípio: **números e decisões vêm da heurística determinística; a LLM cu
 
 ## 6. Roadmap técnico (ordem de implementação)
 
-Ordem pensada para ter algo rodando ponta a ponta o quanto antes, e só então enriquecer. Mapeia a Fase 0 do produto.
+Ordem pensada para ter algo rodando ponta a ponta o quanto antes, e só então enriquecer. Marcos 0–4 mapeiam a Fase 0 do produto (concluída); Marcos 5–8 mapeiam a Fase 1.
 
 **Marco 0 — Fundação (esqueleto que sobe)**
 1. Projeto Next.js (App Router) + Tailwind + Prisma + Neon conectados.
@@ -284,6 +284,27 @@ Ordem pensada para ter algo rodando ponta a ponta o quanto antes, e só então e
 16. Conta (perfil, dados da Casa, sair).
 17. PWA (manifest, ícones, instalável).
 18. Validar o critério de pronto do F0 ([spec-produto §4.1](./spec-produto.md)): Camila registra 1ª Compra, vê Despensa preenchida, volta e vê ≥3 Sugestões explicadas.
+
+### Fase 1 — Atrito do dia a dia
+
+> Notificações push ([ADR-016](./adr/ADR-016-notificacoes-1-por-dia.md)) foram **adiadas para fase posterior** ([ADR-024](./adr/ADR-024-adiamento-das-notificacoes-push.md)) — não há marco de push na F1.
+
+**Marco 5 — Registro de Compra completo**
+19. `descricao` opcional e data editável (default hoje, futuro proibido) no registro ([ADR-021](./adr/ADR-021-descricao-e-data-no-registro.md)).
+20. Bottom sheet no chip do item: quantidade + unidade + categoria, com listas fixas no domínio do Item ([ADR-022](./adr/ADR-022-categoria-e-unidade-no-chip-do-registro.md)).
+21. Edição e exclusão de Compra, com rederivação da Despensa por Item afetado e recálculo das Sugestões ([ADR-023](./adr/ADR-023-edicao-e-exclusao-de-compra.md)).
+22. Página "Dicas de uso" na Conta ([ADR-025](./adr/ADR-025-dicas-de-uso-na-conta.md)).
+
+**Marco 6 — "Marcar da lista"**
+23. Segunda via na tela "Como quer registrar?", disponível com ≥1 Item ativo na Lista; pré-preenche o formulário de Compra ([ADR-017](./adr/ADR-017-marcar-da-lista-na-fase-1.md)) — reusa o formulário extraído no Marco 5.
+
+**Marco 7 — Modo Mercado**
+24. Fullscreen modal ativado pela Lista; Itens agrupados por categoria (do Marco 5); checks grandes; progresso "6 de 12" ([ADR-015](./adr/ADR-015-modo-mercado-na-fase-1.md)).
+25. Finalizar → registro de Compra pré-preenchido com os marcados (reusa a via do Marco 6).
+
+**Marco 8 — Swipe para dispensar + acabamento F1**
+26. Gesto de swipe na Lista para dispensar Sugestão, chamando a ação de dispensar já existente ([ADR-013](./adr/ADR-013-aprendizado-por-proxies.md)).
+27. Validar o critério de pronto da F1 ([spec-produto §4.2](./spec-produto.md)).
 
 **Preparado para depois (sem construir agora):**
 - API JSON via Route Handlers reusando os services → habilita cliente nativo (Capacitor/React Native) na F1/F3.

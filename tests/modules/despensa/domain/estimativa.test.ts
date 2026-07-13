@@ -5,7 +5,9 @@ import {
   textoQuantidade,
   gerarExplicacao,
   diasDesde,
+  rederivarQtdEstimada,
   type HistoricoItem,
+  type HistoricoRederivacao,
 } from "@/modules/despensa/domain/estimativa";
 
 const hoje = new Date("2026-07-11T12:00:00Z");
@@ -194,6 +196,122 @@ describe("calcularConfianca — o ajuste manual mais recente domina", () => {
 
     // Então
     expect(nivel).toBe("alta");
+  });
+});
+
+describe("rederivarQtdEstimada", () => {
+  function historicoRederivacao(
+    over: Partial<HistoricoRederivacao> = {},
+  ): HistoricoRederivacao {
+    return { ...historico(), qtdUltimaCompra: 2, ...over };
+  }
+
+  it("dado um item sem compras e sem ajuste, então remove da Despensa", () => {
+    // Dado
+    const h = historicoRederivacao({
+      numeroCompras: 0,
+      ultimaCompraEm: null,
+      qtdUltimaCompra: null,
+      ultimoAjuste: null,
+    });
+
+    // Quando
+    const qtd = rederivarQtdEstimada(h, 3);
+
+    // Então
+    expect(qtd).toBeNull();
+  });
+
+  it("dado um item sem compras mas com ajuste, então mantém a quantidade atual", () => {
+    // Dado: todas as Compras do item foram excluídas, mas houve "Preciso"
+    const h = historicoRederivacao({
+      numeroCompras: 0,
+      ultimaCompraEm: null,
+      qtdUltimaCompra: null,
+      ultimoAjuste: { tipo: "PRECISO", em: diasAtras(3) },
+    });
+
+    // Quando
+    const qtd = rederivarQtdEstimada(h, 4);
+
+    // Então
+    expect(qtd).toBe(4);
+  });
+
+  it("dado um ajuste mais recente que a última compra, então a quantidade atual é preservada", () => {
+    // Dado: usuário marcou "Acabou" ontem; a Compra editada é mais antiga
+    const h = historicoRederivacao({
+      ultimaCompraEm: diasAtras(10),
+      qtdUltimaCompra: 5,
+      ultimoAjuste: { tipo: "ACABOU", em: diasAtras(1) },
+    });
+
+    // Quando
+    const qtd = rederivarQtdEstimada(h, 0);
+
+    // Então
+    expect(qtd).toBe(0);
+  });
+
+  it("dado uma compra mais recente que o ajuste, então a quantidade da última compra prevalece", () => {
+    // Dado
+    const h = historicoRederivacao({
+      ultimaCompraEm: diasAtras(1),
+      qtdUltimaCompra: 6,
+      ultimoAjuste: { tipo: "POUCO", em: diasAtras(9) },
+    });
+
+    // Quando
+    const qtd = rederivarQtdEstimada(h, 1);
+
+    // Então
+    expect(qtd).toBe(6);
+  });
+
+  it("dado uma edição que altera a quantidade da última compra, então a Despensa reflete a nova quantidade", () => {
+    // Dado: a Compra mais recente passou de 2 para 8 unidades
+    const h = historicoRederivacao({
+      ultimaCompraEm: diasAtras(2),
+      qtdUltimaCompra: 8,
+      ultimoAjuste: null,
+    });
+
+    // Quando
+    const qtd = rederivarQtdEstimada(h, 2);
+
+    // Então
+    expect(qtd).toBe(8);
+  });
+
+  it("dado ajuste e compra no mesmo instante, então o ajuste domina", () => {
+    // Dado: empate de timestamps (consistente com calcularConfianca)
+    const mesmoInstante = diasAtras(1);
+    const h = historicoRederivacao({
+      ultimaCompraEm: mesmoInstante,
+      qtdUltimaCompra: 7,
+      ultimoAjuste: { tipo: "ACABOU", em: mesmoInstante },
+    });
+
+    // Quando
+    const qtd = rederivarQtdEstimada(h, 0);
+
+    // Então
+    expect(qtd).toBe(0);
+  });
+
+  it("dado um item novo sem DespensaItem atual, então nasce com a quantidade da última compra", () => {
+    // Dado
+    const h = historicoRederivacao({
+      ultimaCompraEm: diasAtras(0),
+      qtdUltimaCompra: 3,
+      ultimoAjuste: null,
+    });
+
+    // Quando
+    const qtd = rederivarQtdEstimada(h, null);
+
+    // Então
+    expect(qtd).toBe(3);
   });
 });
 

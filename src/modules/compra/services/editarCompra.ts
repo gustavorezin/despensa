@@ -11,22 +11,24 @@ import {
 } from "@/modules/compra/services/entradaCompra";
 
 /**
- * Caso de uso: registrar uma Compra manual. Resolve/cria cada Item da Casa,
- * persiste Compra + CompraItem, rederiva a Despensa e recalcula as Sugestões —
- * tudo na mesma transação (§4.2/§4.3/§4.5). Itens comprados saem da Lista.
+ * Caso de uso: editar uma Compra existente (descrição, data, itens) — ADR-023.
+ * As linhas são trocadas por inteiro e a Despensa é rederivada para a união
+ * dos Itens antigos e novos (um Item removido da Compra também precisa
+ * recalcular). Sugestões são regeneradas na mesma transação.
  */
-export async function registrarCompra({
+export async function editarCompra({
   casaId,
-  usuarioId,
+  compraId,
   entrada,
 }: {
   casaId: string;
-  usuarioId: string;
+  compraId: string;
   entrada: EntradaCompra;
-}) {
+}): Promise<void> {
   const dados = entradaCompraSchema.parse(entrada);
   const { descricao, data } = resolverCabecalho(dados);
 
+  // Fora da transação, espelhando registrarCompra (mesmo trade-off aceito).
   const linhas = await Promise.all(
     dados.itens.map(async (linha) => {
       const item = await ItemRepository.acharOuCriar({
@@ -42,14 +44,11 @@ export async function registrarCompra({
     }),
   );
 
-  // Compra + derivação da Despensa nascem na MESMA transação: ou as duas
-  // acontecem, ou nenhuma (§4.2/§4.3). Evita Compra persistida com Despensa
-  // desatualizada e o risco de reenvio/duplicação num passo pós-commit.
-  return prisma.$transaction(async (tx) => {
-    const compraId = await CompraRepository.criarComItens({
+  await prisma.$transaction(async (tx) => {
+    const { itemIdsAntigos } = await CompraRepository.atualizarComItens({
       db: tx,
       casaId,
-      usuarioId,
+      compraId,
       descricao,
       data,
       itens: linhas,
@@ -65,14 +64,17 @@ export async function registrarCompra({
       });
     }
 
-    const itemIds = [...new Set(linhas.map((l) => l.itemId))];
+    const itemIdsNovos = [...new Set(linhas.map((l) => l.itemId))];
+    const afetados = [...new Set([...itemIdsAntigos, ...itemIdsNovos])];
 
-    await rederivarDespensa({ db: tx, casaId, itemIds });
+    await rederivarDespensa({ db: tx, casaId, itemIds: afetados });
 
-    // Itens comprados saem da Lista; em seguida o motor regenera as Sugestões.
-    await ListaRepository.marcarComprados({ db: tx, casaId, itemIds });
+    // Item adicionado na edição sai da Lista, coerente com o registro.
+    await ListaRepository.marcarComprados({
+      db: tx,
+      casaId,
+      itemIds: itemIdsNovos,
+    });
     await recalcularSugestoes({ db: tx, casaId });
-
-    return compraId;
   });
 }
