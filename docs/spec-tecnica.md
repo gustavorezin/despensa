@@ -105,23 +105,25 @@ despensa/
 │   │   │   └── conta/
 │   │   ├── api/                # Route Handlers (auth, webhooks, API futura)
 │   │   └── layout.tsx
+│   ├── lib/                     # cliente Prisma singleton
 │   ├── modules/                 # DOMÍNIO + APLICAÇÃO por contexto
 │   │   ├── casa/
 │   │   │   ├── domain/         # entidades e regras puras
 │   │   │   ├── services/       # casos de uso
 │   │   │   └── repository/     # acesso a dados (Prisma)
+│   │   ├── usuario/            # perfil do Usuario (nome)
 │   │   ├── item/
 │   │   ├── compra/
-│   │   ├── despensa/
+│   │   ├── despensa/           # estado derivado (services/ + repository/)
 │   │   ├── lista/
-│   │   └── learning/           # motor de aprendizado (só domain/)
+│   │   └── learning/           # motor de aprendizado: domain/ (estimativa +
+│   │                           #   sugestões, puro) e repository/ (carga de proxies)
 │   └── shared/
-│       ├── db/                 # cliente Prisma singleton
 │       ├── auth/               # config Auth.js, helpers de sessão
-│       ├── validation/         # schemas Zod compartilhados
-│       ├── ui/                 # componentes: BottomSheet, Chip, Semaforo,
-│       │                       #   EmptyState, BadgeSugestao...
+│       ├── ui/                 # componentes e hooks: BottomSheet, EstadoVazio,
+│       │                       #   NavInferior, SheetAdicionarItem, useBuscaItens...
 │       └── utils/
+│                               # (schemas Zod ficam junto do service que os usa)
 ├── tests/                       # Vitest (domínio) + Playwright (E2E)
 └── ...config (next, tailwind, tsconfig, eslint)
 ```

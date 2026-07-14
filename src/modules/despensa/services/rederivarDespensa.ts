@@ -4,7 +4,7 @@ import { DespensaRepository } from "@/modules/despensa/repository/DespensaReposi
 import {
   calcularConfianca,
   rederivarQtdEstimada,
-} from "@/modules/despensa/domain/estimativa";
+} from "@/modules/learning/domain/estimativa";
 
 /**
  * Rederiva o DespensaItem de cada Item afetado por uma mudança nas Compras —

@@ -4,9 +4,9 @@ import { CompraRepository } from "@/modules/compra/repository/CompraRepository";
 import { rederivarDespensa } from "@/modules/despensa/services/rederivarDespensa";
 import { ListaRepository } from "@/modules/lista/repository/ListaRepository";
 import { recalcularSugestoes } from "@/modules/lista/services/recalcularSugestoes";
+import { resolverCabecalho } from "@/modules/compra/domain/cabecalho";
 import {
   entradaCompraSchema,
-  resolverCabecalho,
   type EntradaCompra,
 } from "@/modules/compra/services/entradaCompra";
 
@@ -58,6 +58,7 @@ export async function editarCompra({
     for (const linha of linhas) {
       await ItemRepository.atualizarClassificacao({
         db: tx,
+        casaId,
         itemId: linha.itemId,
         categoria: linha.categoria,
         unidadePadrao: linha.unidade,

@@ -8,7 +8,7 @@ export type LinhaLista = {
   nome: string;
   ehSugestao: boolean;
   badge: string;
-  qtyText: string;
+  unidade: string;
   qtd: number;
   resumo: string;
   explicacao: string;
@@ -74,7 +74,7 @@ export async function montarLista({
       ehSugestao,
       badge: ehSugestao ? "🤖" : "✋",
       qtd,
-      qtyText: `${qtd} ${unidade}`,
+      unidade,
       resumo,
       explicacao,
     };

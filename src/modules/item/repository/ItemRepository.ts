@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { normalizarNome } from "@/modules/item/domain/normalizacao";
 
 const VIOLACAO_UNICIDADE = "P2002";
 
@@ -8,13 +9,6 @@ function ehViolacaoUnicidade(erro: unknown): boolean {
     erro instanceof Prisma.PrismaClientKnownRequestError &&
     erro.code === VIOLACAO_UNICIDADE
   );
-}
-
-/** Normalização simples de nome (ADR-005): colapsa espaços e capitaliza a 1ª letra. */
-export function normalizarNome(bruto: string): string {
-  const limpo = bruto.trim().replace(/\s+/g, " ");
-  if (!limpo) return limpo;
-  return limpo.charAt(0).toUpperCase() + limpo.slice(1);
 }
 
 export const ItemRepository = {
@@ -37,27 +31,32 @@ export const ItemRepository = {
   },
 
   /**
-   * Atualiza a classificação de um Item — só os campos informados. Quando o
-   * usuário informa, sobrescreve o valor anterior: a última palavra é dele
-   * (ADR-022). `undefined` não toca no campo; `null` limpa.
+   * Atualiza a classificação de um Item da Casa — só os campos informados.
+   * Quando o usuário informa, sobrescreve o valor anterior: a última palavra é
+   * dele (ADR-022). `undefined` não toca no campo; `null` limpa. Devolve se o
+   * Item existia na Casa (o filtro por casaId é a guarda multi-tenant).
    */
   async atualizarClassificacao({
     db = prisma,
+    casaId,
     itemId,
     categoria,
     unidadePadrao,
   }: {
     db?: Prisma.TransactionClient;
+    casaId: string;
     itemId: string;
     categoria?: string | null;
     unidadePadrao?: string | null;
-  }) {
-    if (categoria === undefined && unidadePadrao === undefined) return;
-    await db.item.update({
-      where: { id: itemId },
+  }): Promise<{ encontrado: boolean }> {
+    if (categoria === undefined && unidadePadrao === undefined) {
+      return { encontrado: true };
+    }
+    const { count } = await db.item.updateMany({
+      where: { id: itemId, casaId },
       data: { categoria, unidadePadrao },
-      select: { id: true },
     });
+    return { encontrado: count > 0 };
   },
 
   /**
