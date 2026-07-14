@@ -3,19 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { exigirCasa } from "@/shared/auth/sessao";
 import {
-  aceitarItem,
   descartarItem,
   editarQtd,
   adicionarManual,
 } from "@/modules/lista/services/acoesLista";
 
 // Ações da Lista (ADR-003/008). Todas revalidam a home após mutar.
-export async function aceitarAction(listaItemId: string) {
-  const { casaId } = await exigirCasa();
-  await aceitarItem({ casaId, listaItemId });
-  revalidatePath("/lista");
-}
-
 export async function descartarAction(listaItemId: string) {
   const { casaId } = await exigirCasa();
   await descartarItem({ casaId, listaItemId });
