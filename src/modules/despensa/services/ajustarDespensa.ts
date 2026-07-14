@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { DespensaRepository } from "@/modules/despensa/repository/DespensaRepository";
-import { calcularConfianca } from "@/modules/learning/domain/estimativa";
+import { calcularConfianca } from "@/modules/aprendizado/domain/estimativa";
 import { recalcularSugestoes } from "@/modules/lista/services/recalcularSugestoes";
 
 // Ajuste rápido (ADR-007). `valor` é o contrato do PRECISO: obrigatório nele e

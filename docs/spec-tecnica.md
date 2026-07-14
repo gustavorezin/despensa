@@ -1,6 +1,6 @@
 # Technical Specification
 
-**Versão:** v0.2.0 — 2026-07-12
+**Versão:** v0.3.0 — 2026-07-14
 **Decisor(es):** Gustavo Rezin Durigon
 
 > Guia técnico de desenvolvimento. Complementa [spec-produto.md](./spec-produto.md) e [spec-design.md](./spec-design.md). Não substitui ADRs de produto/UX; quando a arquitetura é restringida por uma decisão de produto, o ADR é citado.
@@ -81,9 +81,9 @@ Um módulo por contexto do vocabulário canônico ([ADR-011](./adr/ADR-011-vocab
 | `compra` | Registro de Compra e seus itens. Fonte primária de dados de aprendizado. |
 | `despensa` | Estoque estimado por Item, confiança (semáforo), ajustes rápidos (Tem/Pouco/Acabou). |
 | `lista` | Lista unificada (Sugestões + manuais), agrupamento por motivo, ações (aceitar/editar/dispensar). |
-| `learning` | **Motor de aprendizado** — deriva estimativas e Sugestões a partir de Compras e ajustes. Domínio puro. |
+| `aprendizado` | **Motor de aprendizado** — deriva estimativas e Sugestões a partir de Compras e ajustes. Domínio puro. |
 
-`learning` é consumido por `despensa` e `lista`, mas não depende deles: recebe dados de entrada e devolve estimativas/Sugestões (ver §5).
+`aprendizado` é consumido por `despensa` e `lista`, mas não depende deles: recebe dados de entrada e devolve estimativas/Sugestões (ver §5).
 
 ### 2.3 Estrutura de pastas
 
@@ -116,7 +116,7 @@ despensa/
 │   │   ├── compra/
 │   │   ├── despensa/           # estado derivado (services/ + repository/)
 │   │   ├── lista/
-│   │   └── learning/           # motor de aprendizado: domain/ (estimativa +
+│   │   └── aprendizado/        # motor de aprendizado: domain/ (estimativa +
 │   │                           #   sugestões, puro) e repository/ (carga de proxies)
 │   └── shared/
 │       ├── auth/               # config Auth.js, helpers de sessão
@@ -210,7 +210,7 @@ Disparado após cada Compra e cada Ajuste. Reavalia, por Item da Casa: frequênc
 
 ### 5.1 Arquitetura
 
-O motor é um **módulo de domínio puro** (`modules/learning/domain`), sem I/O, atrás de uma interface:
+O motor é um **módulo de domínio puro** (`modules/aprendizado/domain`), sem I/O, atrás de uma interface:
 
 ```
 interface MotorAprendizado {

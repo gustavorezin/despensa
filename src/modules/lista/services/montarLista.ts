@@ -1,6 +1,6 @@
 import { ListaRepository } from "@/modules/lista/repository/ListaRepository";
-import { AprendizadoRepository } from "@/modules/learning/repository/AprendizadoRepository";
-import { gerarSugestao } from "@/modules/learning/domain/motor";
+import { AprendizadoRepository } from "@/modules/aprendizado/repository/AprendizadoRepository";
+import { gerarSugestao } from "@/modules/aprendizado/domain/motor";
 
 export type LinhaLista = {
   listaItemId: string;
@@ -47,7 +47,9 @@ export async function montarLista({
   };
 
   for (const a of ativos) {
-    const ehSugestao = a.origem === "SUGESTAO" && a.status === "ATIVO";
+    // ACEITO segue sendo Sugestão na tela (badge, grupo, explicação) — o
+    // aceite implícito só a protege do recálculo (ADR-026).
+    const ehSugestao = a.origem === "SUGESTAO";
     const qtd = a.qtdSugerida != null ? Number(a.qtdSugerida) : 1;
     const unidade = a.item.unidadePadrao ?? "un";
 

@@ -5,7 +5,7 @@ import {
   textoQuantidade,
   gerarExplicacao,
   type NivelConfianca,
-} from "@/modules/learning/domain/estimativa";
+} from "@/modules/aprendizado/domain/estimativa";
 import { agruparPorCategoria } from "@/modules/item/domain/categorias";
 import { rotularDataCompra } from "@/shared/utils/data";
 

@@ -8,7 +8,7 @@ import {
   rederivarQtdEstimada,
   type HistoricoItem,
   type HistoricoRederivacao,
-} from "@/modules/learning/domain/estimativa";
+} from "@/modules/aprendizado/domain/estimativa";
 
 const hoje = new Date("2026-07-11T12:00:00Z");
 const diasAtras = (n: number) => new Date(hoje.getTime() - n * 86_400_000);

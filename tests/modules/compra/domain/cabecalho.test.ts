@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { resolverCabecalho } from "@/modules/compra/domain/cabecalho";
 
-// Data local fixa (11/07/2026, 15h) — independe do fuso da máquina de teste.
-const hoje = new Date(2026, 6, 11, 15, 0, 0);
+// 11/07/2026 às 15h no fuso da Casa (America/Sao_Paulo, −03:00) — instante
+// absoluto: o teste dá o mesmo resultado em qualquer fuso de máquina.
+const hoje = new Date("2026-07-11T15:00:00-03:00");
 
 describe("resolverCabecalho", () => {
   it("dado uma entrada sem data, então a Compra é datada de hoje", () => {
@@ -16,7 +17,7 @@ describe("resolverCabecalho", () => {
     expect(data).toBe(hoje);
   });
 
-  it("dado uma data retroativa, então é aceita ao meio-dia local (imune a fuso)", () => {
+  it("dado uma data retroativa, então é aceita ao meio-dia UTC (imune a fuso)", () => {
     // Dado
     const entrada = { data: "2026-07-01" };
 
@@ -24,10 +25,10 @@ describe("resolverCabecalho", () => {
     const { data } = resolverCabecalho(entrada, hoje);
 
     // Então
-    expect(data.getFullYear()).toBe(2026);
-    expect(data.getMonth()).toBe(6);
-    expect(data.getDate()).toBe(1);
-    expect(data.getHours()).toBe(12);
+    expect(data.getUTCFullYear()).toBe(2026);
+    expect(data.getUTCMonth()).toBe(6);
+    expect(data.getUTCDate()).toBe(1);
+    expect(data.getUTCHours()).toBe(12);
   });
 
   it("dado a data de hoje por extenso, então é aceita (fronteira do futuro)", () => {
@@ -38,7 +39,7 @@ describe("resolverCabecalho", () => {
     const { data } = resolverCabecalho(entrada, hoje);
 
     // Então
-    expect(data.getDate()).toBe(11);
+    expect(data.getUTCDate()).toBe(11);
   });
 
   it("dado uma data futura, então recusa (ADR-021)", () => {

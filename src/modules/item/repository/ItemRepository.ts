@@ -12,14 +12,18 @@ function ehViolacaoUnicidade(erro: unknown): boolean {
 }
 
 export const ItemRepository = {
-  /** Autocomplete: Itens da Casa cujo nome contém o termo (ADR-005). */
+  /**
+   * Autocomplete: Itens da Casa cujo nome contém o termo (ADR-005). Prioriza
+   * os já comprados (mais linhas de Compra primeiro), como pede o ADR; o
+   * desempate alfabético mantém a ordem estável.
+   */
   async buscarPorTermo({ casaId, termo }: { casaId: string; termo: string }) {
     return prisma.item.findMany({
       where: {
         casaId,
         nomeCanonico: { contains: termo, mode: "insensitive" },
       },
-      orderBy: { nomeCanonico: "asc" },
+      orderBy: [{ compraItens: { _count: "desc" } }, { nomeCanonico: "asc" }],
       take: 7,
       select: {
         id: true,
