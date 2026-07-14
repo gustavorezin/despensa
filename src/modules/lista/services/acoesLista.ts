@@ -2,17 +2,6 @@ import { z } from "zod";
 import { ListaRepository } from "@/modules/lista/repository/ListaRepository";
 import { ItemRepository } from "@/modules/item/repository/ItemRepository";
 
-/** Aceitar uma Sugestão: passa a integrar a Lista do usuário (grupo "Você adicionou"). */
-export async function aceitarItem({
-  casaId,
-  listaItemId,
-}: {
-  casaId: string;
-  listaItemId: string;
-}) {
-  await ListaRepository.definirStatus({ casaId, id: listaItemId, status: "ACEITO" });
-}
-
 /**
  * Descartar da Lista. Numa Sugestão, vira DISPENSADO (sinal negativo que a
  * suprime até uma nova Compra); num item manual/aceito, remove de vez.

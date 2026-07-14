@@ -3,17 +3,15 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { BottomSheet } from "@/shared/ui/BottomSheet";
+import { LinhaDeslizavel } from "@/shared/ui/LinhaDeslizavel";
 import {
   IconeMais,
   IconeMenos,
-  IconeCheck,
-  IconeX,
   IconeInfo,
   IconeLupa,
 } from "@/shared/ui/icones";
 import type { GrupoLista, LinhaLista } from "@/modules/lista/services/montarLista";
 import {
-  aceitarAction,
   descartarAction,
   editarQtdAction,
   adicionarItemAction,
@@ -70,13 +68,6 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
     });
   }
 
-  function aceitar(id: string) {
-    setSheet(null);
-    iniciar(() => {
-      aceitarAction(id);
-    });
-  }
-
   function descartar(id: string) {
     setSheet(null);
     iniciar(() => {
@@ -107,7 +98,8 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
         >
           <span className="text-[18px] leading-tight">🤖</span>
           <span className="text-[13.5px] font-semibold leading-snug text-[#544d8f]">
-            Separei o que provavelmente está faltando. Você confirma.
+            Separei o que provavelmente está faltando. Deslize pra tirar o que
+            não precisar.
           </span>
         </div>
       )}
@@ -119,67 +111,46 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
           </div>
           <div className="flex flex-col gap-2.5">
             {grupo.itens.map((linha) => (
-              <div
+              <LinhaDeslizavel
                 key={linha.listaItemId}
-                className="rounded-[18px] border border-borda bg-superficie p-3.5"
+                aoDispensar={() => descartar(linha.listaItemId)}
+                className={
+                  linha.ehSugestao
+                    ? "rounded-[18px] border p-3.5"
+                    : "rounded-[18px] border border-borda bg-superficie p-3.5"
+                }
+                style={
+                  linha.ehSugestao
+                    ? {
+                        background:
+                          "color-mix(in srgb, var(--color-acento) 7%, #fff)",
+                        borderColor:
+                          "color-mix(in srgb, var(--color-acento) 18%, #fff)",
+                      }
+                    : undefined
+                }
               >
-                <div className="flex items-start gap-2.5">
+                <div className="flex items-center gap-2">
+                  {/* Tocar no item abre a explicação da Sugestão (ADR-008). */}
                   <button
                     type="button"
                     onClick={() => linha.ehSugestao && setSheet(linha)}
-                    className="min-w-0 flex-1 text-left"
+                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-[15.5px] font-bold text-tinta">
-                        {linha.nome}
-                      </span>
-                      <span className="text-[12.5px] leading-none">
-                        {linha.badge}
-                      </span>
+                    <span className="truncate text-[15.5px] font-bold text-tinta">
+                      {linha.nome}
+                    </span>
+                    <span className="flex-none text-[12.5px] leading-none">
+                      {linha.badge}
                     </span>
                   </button>
-                  {linha.ehSugestao && (
-                    <button
-                      type="button"
-                      onClick={() => aceitar(linha.listaItemId)}
-                      aria-label="Aceitar"
-                      className="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[11px] bg-acento text-white"
-                    >
-                      <IconeCheck tamanho={17} />
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => descartar(linha.listaItemId)}
-                    aria-label="Descartar"
-                    className="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[11px] bg-[#f6f1ea] text-suave-2"
-                  >
-                    <IconeX tamanho={15} />
-                  </button>
-                </div>
 
-                <div className="mt-2.5 flex items-center justify-between gap-2.5">
-                  <div className="min-w-0 flex-1">
-                    {linha.ehSugestao ? (
-                      <button
-                        type="button"
-                        onClick={() => setSheet(linha)}
-                        className="flex items-center gap-1.5 text-left text-suave"
-                      >
-                        <span className="text-[12.5px] font-medium leading-snug text-suave">
-                          {linha.resumo}
-                        </span>
-                        <span className="flex text-[#c3bbaf]">
-                          <IconeInfo tamanho={14} />
-                        </span>
-                      </button>
-                    ) : (
-                      <span className="text-[12px] font-semibold text-[#b4aba0]">
-                        Adicionado por você
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-none items-center rounded-xl bg-[#f6f1ea]">
+                  <div
+                    className="flex flex-none items-center rounded-xl"
+                    style={{
+                      background: linha.ehSugestao ? "#fff" : "#f6f1ea",
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => mudarQtd(linha, -1)}
@@ -188,7 +159,7 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
                     >
                       <IconeMenos tamanho={15} />
                     </button>
-                    <span className="min-w-[64px] text-center text-[13.5px] font-bold text-tinta">
+                    <span className="min-w-[58px] text-center text-[13.5px] font-bold text-tinta">
                       {qtdDe(linha)} {linha.qtyText.split(" ").slice(1).join(" ")}
                     </span>
                     <button
@@ -200,8 +171,19 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
                       <IconeMais tamanho={15} />
                     </button>
                   </div>
+
+                  {linha.ehSugestao && (
+                    <button
+                      type="button"
+                      onClick={() => setSheet(linha)}
+                      aria-label="Ver explicação"
+                      className="flex h-[34px] w-[30px] flex-none items-center justify-center text-[#b6ada0]"
+                    >
+                      <IconeInfo tamanho={18} />
+                    </button>
+                  )}
                 </div>
-              </div>
+              </LinhaDeslizavel>
             ))}
           </div>
         </div>
@@ -253,22 +235,13 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
             <p className="mb-5 text-[15.5px] leading-relaxed text-[#544e45]">
               {sheet.explicacao}
             </p>
-            <div className="flex gap-2.5">
-              <button
-                type="button"
-                onClick={() => descartar(sheet.listaItemId)}
-                className="flex-1 rounded-[15px] bg-[#f4efe7] px-4 py-4 text-[15.5px] font-bold text-[#6e665d]"
-              >
-                Dispensar
-              </button>
-              <button
-                type="button"
-                onClick={() => aceitar(sheet.listaItemId)}
-                className="flex-[1.4] rounded-[15px] bg-acento px-4 py-4 text-[15.5px] font-bold text-white"
-              >
-                Aceitar
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => descartar(sheet.listaItemId)}
+              className="w-full rounded-[15px] bg-[#f4efe7] px-4 py-4 text-[15.5px] font-bold text-[#6e665d]"
+            >
+              Dispensar da Lista
+            </button>
           </>
         )}
       </BottomSheet>
