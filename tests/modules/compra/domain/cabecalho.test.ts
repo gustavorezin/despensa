@@ -31,15 +31,16 @@ describe("resolverCabecalho", () => {
     expect(data.getUTCHours()).toBe(12);
   });
 
-  it("dado a data de hoje por extenso, então é aceita (fronteira do futuro)", () => {
-    // Dado
+  it("dado a data de hoje por extenso, então mantém o instante real do registro", () => {
+    // Dado: a fronteira do futuro é aceita, e o instante preserva a ordem
+    // entre a Compra e os ajustes do mesmo dia (ADR-013)
     const entrada = { data: "2026-07-11" };
 
     // Quando
     const { data } = resolverCabecalho(entrada, hoje);
 
     // Então
-    expect(data.getUTCDate()).toBe(11);
+    expect(data).toBe(hoje);
   });
 
   it("dado uma data futura, então recusa (ADR-021)", () => {
