@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { BottomSheet } from "@/shared/ui/BottomSheet";
 import {
   IconeMais,
@@ -217,6 +218,15 @@ export function ListaConteudo({ grupos }: { grupos: GrupoLista[] }) {
         <IconeMais tamanho={17} strokeWidth={2.4} />
         Adicionar item
       </button>
+
+      {/* Saída para o mercado (ADR-015): executar a compra por prateleira. */}
+      <Link
+        href="/mercado"
+        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl border border-borda bg-superficie px-4 py-4 text-[15px] font-bold text-acento"
+      >
+        <span className="text-[17px]">🛒</span>
+        Modo Mercado
+      </Link>
 
       {/* Explicação da Sugestão (ADR-008): ações no próprio drawer */}
       <BottomSheet

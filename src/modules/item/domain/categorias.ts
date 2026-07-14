@@ -40,3 +40,26 @@ export function comoCategoria(
     ? (valor as Categoria)
     : undefined;
 }
+
+/**
+ * Agrupa itens por categoria na ordem de prateleira (`pesoCategoria`), com
+ * "Sem categoria" por último e os itens de cada grupo em ordem alfabética.
+ * Usado pela Despensa e pelo Modo Mercado (server e client).
+ */
+export function agruparPorCategoria<
+  T extends { nome: string; categoria?: string | null },
+>(itens: T[]): { categoria: string; itens: T[] }[] {
+  const porCategoria = new Map<string, T[]>();
+  for (const item of itens) {
+    const categoria = item.categoria ?? SEM_CATEGORIA;
+    const grupo = porCategoria.get(categoria) ?? [];
+    grupo.push(item);
+    porCategoria.set(categoria, grupo);
+  }
+  return [...porCategoria.entries()]
+    .map(([categoria, itens]) => ({
+      categoria,
+      itens: itens.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
+    }))
+    .sort((a, b) => pesoCategoria(a.categoria) - pesoCategoria(b.categoria));
+}
