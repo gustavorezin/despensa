@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { TipoAjuste } from "@/modules/despensa/domain/estimativa";
+import type { TipoAjuste } from "@/modules/aprendizado/domain/estimativa";
 
 type LinhaHistorico = {
   numeroCompras: number;

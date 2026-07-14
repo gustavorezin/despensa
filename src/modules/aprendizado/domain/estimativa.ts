@@ -1,12 +1,11 @@
 /*
-  Estimativa de Despensa — domínio puro (sem I/O). Heurística determinística F0
-  (spec-tecnica §5.2): deriva a confiança da estimativa a partir de proxies
-  (nº de Compras, recência, último ajuste). A pontuação é interna e nunca é
-  exposta: a UI só mostra o semáforo 🟢/🟡/🔴 (ADR-004).
+  Estimativa de Despensa — domínio puro (sem I/O). Metade "estimarDespensa" do
+  motor de aprendizado (spec-tecnica §5.1/§5.2): deriva quantidade e confiança
+  a partir de proxies (nº de Compras, recência, último ajuste). A pontuação é
+  interna e nunca é exposta: a UI só mostra o semáforo 🟢/🟡/🔴 (ADR-004).
+  A outra metade ("gerarSugestao") vive em ./motor.ts.
 
   O "agora" é sempre injetado (`hoje`) para manter as funções testáveis.
-  No Marco 3, o motor de aprendizado formal pode substituir estas funções
-  atrás da interface MotorAprendizado (§5.1).
 */
 
 export type NivelConfianca = "alta" | "media" | "baixa";
@@ -35,8 +34,11 @@ function limitar(n: number, min = 0, max = 1): number {
   return Math.min(max, Math.max(min, n));
 }
 
-/** O ajuste manual manda quando é o evento mais recente do Item. */
-function ajusteDomina(h: HistoricoItem): boolean {
+/** O ajuste manual manda quando é o evento mais recente do Item (ADR-013). */
+export function ajusteDomina(h: {
+  ultimaCompraEm: Date | null;
+  ultimoAjuste: { em: Date } | null;
+}): boolean {
   if (!h.ultimoAjuste) return false;
   if (!h.ultimaCompraEm) return true;
   return h.ultimoAjuste.em.getTime() >= h.ultimaCompraEm.getTime();
