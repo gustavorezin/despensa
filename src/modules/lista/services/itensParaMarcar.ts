@@ -3,6 +3,7 @@ import { comoUnidade, type Unidade } from "@/modules/item/domain/unidades";
 import { comoCategoria, type Categoria } from "@/modules/item/domain/categorias";
 
 export type ItemMarcavel = {
+  itemId: string;
   nome: string;
   quantidade: number;
   unidade?: Unidade;
@@ -22,6 +23,7 @@ export async function itensParaMarcar({
 }): Promise<ItemMarcavel[]> {
   const ativos = await ListaRepository.listarAtivos({ casaId });
   return ativos.map((a) => ({
+    itemId: a.itemId,
     nome: a.item.nomeCanonico,
     quantidade: Math.max(1, Math.round(a.qtdSugerida != null ? Number(a.qtdSugerida) : 1)),
     unidade: comoUnidade(a.item.unidadePadrao),
